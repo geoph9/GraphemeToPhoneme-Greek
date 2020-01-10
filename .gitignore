@@ -1,0 +1,5 @@
+# ignore g2p cmu dictionary (contains the g2p-cmu NN model for g2p conversion)
+./g2p_cmu_dict
+
+# ignore the sphinx source code
+./sphinx4-5prealpha-src
