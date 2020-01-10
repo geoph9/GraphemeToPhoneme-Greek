@@ -1,5 +1,7 @@
 import re
-from g2p_own_rules import process_sentence
+from utils import process_sentence
+
+from prefixes import _prefixes
 
 
 to_plural = lambda word: re.sub("ερα", "ερις", re.sub("τρία", "τρείς", word))  # for 13 and 14 special cases in plural
@@ -23,88 +25,6 @@ def _check_input(number: str, length: int, operator: str = None):
         assert len(number) <= length, "The digit must contain less than " + str(length) + " digits."
     else:
         assert len(number) == length, "The digit must contain " + str(length) + " digits."
-
-_prefixes = {
-    "1digit": {
-        "0": "μηδέν",
-        "1": "ένα",  # μια, ένας
-        "2": "δύο",
-        "3": "τρία",  # τρεις
-        "4": "τέσσερα",  # τέσσερις
-        "5": "πέντε",
-        "6": "έξι",
-        "7": "εφτά",
-        "8": "οχτώ",
-        "9": "εννιά"
-    },
-    "2digit": {
-        "10": "δέκα",
-        "11": "έντεκα",
-        "12": "δώδεκα",
-        "1": "δεκα",
-        "20": "είκοσι",
-        "2": "εικοσι",
-        "30": "τριάντα",
-        "3": "τριαντα",
-        "40": "σαράντα",
-        "4": "σαραντα",
-        "50": "πενήντα",
-        "5": "πενηντα",
-        "60": "εξήντα",
-        "6": "εξηντα",
-        "70": "εβδομήντα",
-        "7": "εβδομηντα",
-        "80": "ογδόντα",
-        "8": "ογδοντα",
-        "90": "ενενήντα",
-        "9": "ενενηντα"
-    },
-    "3digit": {
-        "100": "εκατό",
-        "1": "εκατον",
-        "200": "διακόσια",
-        "2": "διακοσια",
-        "300": "τριακόσια",
-        "3": "τριακοσια",
-        "400": "τετρακόσια",
-        "4": "τετρακοσια",
-        "500": "πεντακόσια",
-        "5": "πεντακοσια",
-        "600": "εξακόσια",
-        "6": "εξακοσια",
-        "700": "εφτακόσια",
-        "7": "εφτακοσια",
-        "800": "οχτακόσια",
-        "8": "οχτακοσια",
-        "900": "εννιακόσια",
-        "9": "εννιακοσια",
-    }
-}
-
-_plural_forms = {
-    "0": "μηδέν",
-    "1": "ένα",
-    "2": "δυο",
-    "3": "τρεις",
-    "4": "τέσσερις",
-    "5": "πέντε",
-    "6": "έξι",
-    "7": "εφτά",
-    "8": "οχτώ",
-    "9": "εννιά"
-}
-
-# Update with 4 digits
-_prefixes['4digit'] = {'1': 'χίλια'}
-_prefixes['4digit'].update({key: (_plural_forms[key] + " χιλιάδες").strip() for key, val in _prefixes['1digit'].items()
-                            if key != "1"})
-
-# For 10, 11, 12, 20, 30, 40, ..., 90 take the prefixes from the 2 digit pronunciations
-#   and convert them to 10000, 11000, 12000, 20000, ..., 90000
-_prefixes['5digit'] = {key + "000": val + " χιλιάδες" for key, val in _prefixes['2digit'].items() if len(key) > 1}
-
-# Update for 6 digits. Replace "διακόσια" with "διακόσιες" in order to bring to plural form
-_prefixes['6digit'] = {key + "000": val[:-2] + "ιες" + " χιλιάδες" for key, val in _prefixes['3digit'].items()}
 
 
 def _convert_1digit(number: str) -> str:

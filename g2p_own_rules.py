@@ -5,6 +5,7 @@ import sys
 
 import re
 from rules import *
+from utils import process_sentence, load_lexicon, _check_dir, InvalidPathError
 
 from typing import Tuple
 
@@ -13,24 +14,6 @@ non_characters: list = ["", " ", "(", ")", ".", ",", ";", "?", "\n", "\r", "\t"]
 basic_substitutes = {
     "4k": "φορ κέι",
 }
-
-
-def process_sentence(word: str) -> str:
-    word = " ".join([re.sub(key, val, word) for key, val in basic_substitutes.items()])
-    word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
-    word = re.sub(r"\s+", " ", word).strip()  # Remove redundant spaces
-    return word
-
-
-class InvalidPathError(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        prospective_dir = values
-        if not os.path.exists(prospective_dir):
-            raise argparse.ArgumentTypeError("InvalidPathError:{0} does not exist".format(prospective_dir))
-        if os.access(prospective_dir, os.R_OK):
-            setattr(namespace, self.dest, prospective_dir)
-        else:
-            raise argparse.ArgumentTypeError("InvalidPathError:{0} is not a readable dir".format(prospective_dir))
 
 
 def _check_triphthongs(word: str):
@@ -168,19 +151,7 @@ def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
             FileNotFoundError: If the paths provided are not valid.
     """
     if check_dirs:
-        # Check existence of words file
-        if not os.path.exists(path_to_file):
-            raise FileNotFoundError("Could not locate the path:", path_to_file)
-        # Check if path to words.txt file is a directory
-        if os.path.isdir(path_to_file):
-            raise IsADirectoryError("Path to the text file is a directory: '" + path_to_file + "'")
-        # Check if the out path is a directory or a file (if it's a file then the parent directory must exist)
-        if os.path.isdir(out_path):
-            # default filename
-            out_path = os.path.join(out_path, "unknown_phonemes.txt")
-        else:
-            if not os.path.exists(os.path.dirname(out_path)):
-                raise FileNotFoundError("Could not locate the directory where the output file will be saved.")
+        out_path = _check_dir(path_to_file=path_to_file, out_path=out_path)
     # Read input file
     with open(path_to_file, "r", encoding="utf-8") as fr:
         lines = fr.readlines()
@@ -191,6 +162,13 @@ def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
             out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
     with open(out_path, "w", encoding="utf-8") as fw:
         fw.writelines(out_lines)
+
+
+def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path: str, check_dirs: bool = True):
+    if check_dirs:
+        out_path = _check_dir(path_to_file=path_to_words_txt, out_path=out_path, path_to_lexicon=path_to_lexicon)
+    lexicon_dict: dict = load_lexicon(path_to_lexicon)
+
 
 
 def main():
@@ -273,6 +251,8 @@ def main():
         sys.exit(0)
 
     # mode 1: Using the cmu lexicon
+    if full_words_args.path_to_words_txt != "." and full_words_args.path_to_lexicon != ".":
+        pass
 
     # mode 2: Do not the lexicon
     if unknown_words_args.path_to_unknown_words != ".":
