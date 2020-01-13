@@ -1,12 +1,31 @@
 import argparse
 import os
+import re
 
 
-def load_lexicon(path_to_lexicon: str) -> dict:
-    with open(path_to_lexicon, "r", encoding="utf-8") as fr:
-        lex_dict = fr.readlines()
-        lex_dict = {str(entry.split()[0]): " ".join(entry.split()[1:]) for entry in lex_dict}
-    return lex_dict
+__basic_substitutes = {
+    "4k": "φορ κέι",
+    "$": "δολλάρια",
+    "€": "ευρώ",
+    "&": "και",
+    "@": "παπάκι",  # ατ
+    "#": "δίεση",  # χασταγκ
+
+}
+
+
+def _read_in_chunks(file_object, chunk_size=2048):
+    """
+    Lazy function to read a file piece by piece.
+    Default chunk size: 2kB.
+    """
+    while True:
+        data = file_object.readlines(chunk_size)
+        if not data:
+            break
+        # a generator tuple
+        data = ((l.split()[0].strip(), " ".join(l.split()[1:]).replace("\n", "").strip()) for l in data)
+        yield data
 
 
 def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
@@ -31,7 +50,7 @@ def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
 
 
 def process_sentence(word: str) -> str:
-    word = " ".join([re.sub(key, val, word) for key, val in basic_substitutes.items()])
+    word = " ".join([re.sub(key, val, word) for key, val in __basic_substitutes.items()])
     word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
     word = re.sub(r"\s+", " ", word).strip()  # Remove redundant spaces
     return word

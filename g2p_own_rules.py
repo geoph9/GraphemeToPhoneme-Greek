@@ -1,19 +1,16 @@
 import argparse
 
 import os
+import fileinput
 import sys
 
 import re
 from rules import *
-from utils import process_sentence, load_lexicon, _check_dir, InvalidPathError
+from utils import process_sentence, _check_dir, InvalidPathError
 
 from typing import Tuple
 
 non_characters: list = ["", " ", "(", ")", ".", ",", ";", "?", "\n", "\r", "\t"]
-
-basic_substitutes = {
-    "4k": "φορ κέι",
-}
 
 
 def _check_triphthongs(word: str):
@@ -48,6 +45,7 @@ def _check_diphthongs(word: str, current_phonemes: list) -> Tuple[str, list]:
         return word, current_phonemes
     assert len(current_phonemes) == len(word), "Number of characters does not equal to number of phonemes."
     FOUND_DIPHTHONG = False
+    new_phonemes: list = []
     for diphthong, phoneme in diphthong_rules.items():
         if diphthong in word:
             occurrences: list = [(a.start(), a.end() - 1) for a in list(re.finditer(diphthong, word))]
@@ -55,7 +53,7 @@ def _check_diphthongs(word: str, current_phonemes: list) -> Tuple[str, list]:
                 FOUND_DIPHTHONG = True
             else:
                 continue
-            new_phonemes: list = []  # [""] * len(phonemes)
+            new_phonemes = []  # [""] * len(phonemes)
             for (start_index, end_index) in occurrences:
                 for phon_id in range(len(current_phonemes)):
                     if start_index <= phon_id <= end_index:
@@ -71,6 +69,7 @@ def _check_diphthongs(word: str, current_phonemes: list) -> Tuple[str, list]:
     ph_index = 0
     # The warning below is not an issue because if there are no diphthongs then FOUND_DIPHTHONG will be False and
     # so we will return earlier
+    assert new_phonemes is not None, "New phonemes should contain the phoneme replacements if we got to this point."
     while ph_index < len(new_phonemes) - 1:
         if new_phonemes[ph_index] == new_phonemes[ph_index + 1]:
             phonemes.append(new_phonemes[ph_index])
@@ -140,7 +139,11 @@ def convert_word(word: str) -> Tuple[str, list]:
 
 
 def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
-    """ Finds the phonemes of a list of unknown words from a file and saves a new file in the following format:
+    """ Finds the phonemes of a list of unknown words from a file in this format:
+            word1
+            word2
+            ...
+        Saves a new file in the following format:
             word1 phone1 phone2 ... phoneN
             word2 phone1 phone2 ... phoneN
         Args:
@@ -157,6 +160,7 @@ def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
         lines = fr.readlines()
         out_lines: list = []
         for word in lines:
+            word = str(word.split()[0]).strip()
             word = process_sentence(word)
             word, current_phones = convert_word(word)  # Get word and phonemes
             out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
@@ -164,10 +168,50 @@ def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
         fw.writelines(out_lines)
 
 
+def _lexicon_lookup(path_to_lexicon: str, N=3):
+    # Implement a hash lookup keeping N characters as the key
+    # IMPORTANT: all words in the lexicon file must be unique (appear only once in the file)
+    lexicon_dict: dict = {}
+    for line in fileinput.input([path_to_lexicon]):
+        word = str(line.split()[0]).strip()
+        phonemes = " ".join(line.split()[1:]).replace("\n", "").strip()
+        k = N if len(word) < N else len(word)  # Keep N characters if word is at least of length N
+        key = word[:k]
+        word_to_phoneme = {word: phonemes}  # Each lexicon dict value will be a dictionary with word -> phonemes
+        if key in lexicon_dict.keys():
+            lexicon_dict[key].append(word_to_phoneme)
+        else:
+            lexicon_dict[key] = [word_to_phoneme]
+    return lexicon_dict
+
+
 def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path: str, check_dirs: bool = True):
     if check_dirs:
         out_path = _check_dir(path_to_file=path_to_words_txt, out_path=out_path, path_to_lexicon=path_to_lexicon)
-    lexicon_dict: dict = load_lexicon(path_to_lexicon)
+    # Get lexicon hash map
+    N = 3
+    # Lexicon dictionary will be of the form:
+    #   { "αυτ": {"αυτός": "a0 f t o1 s", "αυτοί": "a0 f t i1", ...}, ... }
+    lexicon_dict = _lexicon_lookup(path_to_lexicon, N=N)  # hash key length
+    # Get words to transcribe
+    with open(path_to_words_txt, "r", encoding="utf-8") as fr:
+        lines = fr.readlines()
+        out_lines: list = []
+        for word in lines:
+            word = str(word.split()[0]).strip()
+            word = process_sentence(word)
+            key = word[:N]
+            if key in lexicon_dict.keys():
+                if word in lexicon_dict[key].keys():
+                    out_lines.append(word + " " + lexicon_dict[key][word] + "\n")
+                else:
+                    word, current_phones = convert_word(word)  # Get word and phonemes
+                    out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+            else:
+                word, current_phones = convert_word(word)  # Get word and phonemes
+                out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+    with open(out_path, "w", encoding="utf-8") as fw:
+        fw.writelines(out_lines)
 
 
 def main():
@@ -202,7 +246,7 @@ def main():
         description="For testing purposes you may use the --test-word argument followed by a single of words.",
         add_help=False
     )
-    general_parser.add_argument("-o", "--out-path", required=False, default="./new_lexicon.dic",
+    general_parser.add_argument("-o", "--out-path", required=False, default="./data/el-gr.dic",
                                 action=InvalidPathError,
                                 help="Output path for the new lexicon (containing words and phonemes).")
     general_parser.add_argument("-t", "--test-word", required=False, default="",
