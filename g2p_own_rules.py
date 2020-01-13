@@ -170,7 +170,6 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
     lexicon_dict: dict = load_lexicon(path_to_lexicon)
 
 
-
 def main():
     """
         Description: There are 3 parsers and all of them are mixed into a single super parser. This script contains two

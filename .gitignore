@@ -9,3 +9,5 @@
 /sphinx4-5prealpha-src/
 
 .idea/
+
+pyproject.toml
