@@ -97,7 +97,7 @@ contain the words followed by their phonemes.
     ```
    λέξη l e1 k s i0  # calculated from el-gr.dic
    εκτός e0 k t o1 s  # calculated from our algorithm
-   αααα a1 a0 a0 a0  # calculated from el-gr.dic
+   ααα a1 a0 a0  # calculated from el-gr.dic
    ...
    ```
    
@@ -122,3 +122,24 @@ find their phonemes without doing it by hand.
 
 A more detailed description of the algorithm can be found 
 in `g2p_own_rules.py`.
+
+---
+
+#### Special cases:
+1. If you have 2 dictionaries, let's say the original `el-gr.dic` and 
+another one that you created from the `g2p_greek.py` script, then you 
+can combine these into one script by using the `sort.py` script. For 
+usage example, check the script.
+
+2. If you have a kaldi `text` file then you can extract a `words.txt`
+file by using the following command: 
+    
+    `cut -d ' ' -f 2- /home/user/kaldi/egs/greek/data/train/text | sed 's/ /\n/g' | sort -u > words.txt`
+    
+    If you want to use the output lexicon for your kaldi recipe then you 
+may run (after extracting the `words.txt` with the command above): 
+    ```
+    python g2p_greek.py --path-to-words-txt /home/user/kaldi/egs/greek/data/train/words.txt
+                        --path-to-lexicon /home/user/kaldi/egs/greek/el-gr.dic 
+                        --out-path /home/user/kaldi/egs/greek/data/local/lang/lexicon.txt
+   ```
