@@ -1,5 +1,10 @@
+import argparse
+import os
+from tempfile import mkstemp
+from shutil import move
+
 import re
-from utils import process_sentence
+from utils import process_word, handle_commas
 
 from prefixes import _prefixes
 
@@ -40,8 +45,18 @@ def _convert_2digit(number: str) -> str:
     if number in _prefixes['2digit'].keys():  # so if it is 10 then return 'δέκα' (same for 11, 12 , 20, ..., 90)
         return _prefixes['2digit'][number]
     first_digit = number[0]  # e.g. from 15 keep only 1
-    if first_digit == "0":
-        return ""
+    # Special case
+    temp_num = number
+    for index, sub_digit in enumerate(number):
+        if sub_digit == "0":
+            temp_num = number[index+1:]
+        else:
+            number = temp_num
+            break
+    if len(number) == 1:
+        return _convert_1digit(number)  # If we had something like 01 then return the word for 1
+    elif len(number) == 0:
+        return ""  # If we had 00 then return nothing
     # Make sure that the 1st digit exists in the dictionary
     if first_digit not in _prefixes['2digit'].keys():
         raise ValueError("Invalid start:", first_digit, ". Occurred while converting the 2 digit number, ", number)
@@ -55,9 +70,23 @@ def _convert_3digit(number: str) -> str:
     _check_input(number, 3)
     if number in _prefixes['3digit'].keys():  # E.g. if we have 300 then just return "τριακόσια"
         return _prefixes['3digit'][number]
+    # Special case
+    temp_num = number
+    for index, sub_digit in enumerate(number):
+        if sub_digit == "0":
+            temp_num = number[index+1:]
+        else:
+            break
+    number = temp_num
+    if len(number) == 2:
+        return _convert_2digit(number)  # If we had something like 012 then return the word for 12
+    elif len(number) == 1:
+        return _convert_1digit(number)  # If we had something like 001 then return the word for 1
+    elif len(number) == 0:
+        return ""  # If we had 00 then return nothing
     first_digit = number[0]  # e.g. from 387 keep 3
-    if first_digit == "0":
-        return ""
+    # if first_digit == "0":
+    #     return ""
     if first_digit not in _prefixes['3digit'].keys():
         raise ValueError("Invalid start:", first_digit, ". Occurred while converting the 3 digit number, ", number)
     # Return the 3 digit prefix and then the 2 digit prefix
@@ -71,8 +100,24 @@ def _convert_4digit(number: str) -> str:
     if number in _prefixes['4digit'].keys():  # E.g. if we have 7000 then just return "εφτά χιλιάδες"
         return _prefixes['4digit'][number]
     first_digit = number[0]  # e.g. from 7879 keep 7
-    if first_digit == "0":
-        return ""
+    # Special case
+    temp_num = number
+    for index, sub_digit in enumerate(number):
+        if sub_digit == "0":
+            temp_num = number[index+1:]
+        else:
+            number = temp_num
+            break
+    if len(number) == 3:
+        return _convert_3digit(number)  # If we had something like 0112 then return the word for 112
+    elif len(number) == 2:
+        return _convert_2digit(number)  # If we had something like 0012 then return the word for 12
+    elif len(number) == 1:
+        return _convert_1digit(number)  # If we had something like 0001 then return the word for 1
+    elif len(number) == 0:
+        return ""  # If we had 00 then return nothing
+    # if first_digit == "0":
+    #     return ""
     if first_digit not in _prefixes['4digit'].keys():
         raise ValueError("Invalid start:", first_digit, ". Occurred while converting the 4 digit number, ", number)
     # Return the 4 digit prefix and then the 4 digit prefix
@@ -85,6 +130,24 @@ def _convert_5digit(number: str) -> str:
     _check_input(number, 5)
     if number in _prefixes['5digit'].keys():  # E.g. if we have 40000 then just return "σαράντα χιλιάδες"
         return _prefixes['5digit'][number]
+    # Special case
+    temp_num = number
+    for index, sub_digit in enumerate(number):
+        if sub_digit == "0":
+            temp_num = number[index+1:]
+        else:
+            number = temp_num
+            break
+    if len(number) == 4:
+        return _convert_4digit(number)  # If we had something like 01112 then return the word for 1112
+    if len(number) == 3:
+        return _convert_3digit(number)  # If we had something like 00112 then return the word for 112
+    elif len(number) == 2:
+        return _convert_2digit(number)  # If we had something like 00012 then return the word for 12
+    elif len(number) == 1:
+        return _convert_1digit(number)  # If we had something like 00001 then return the word for 1
+    elif len(number) == 0:
+        return ""  # If we had 00 then return nothing
     # At first find the 2 digit prefix -> e.g. from 89898 get the word for 89
     # Special case 13 and 14 where there needs to be a certain plural form (δεκατρείς χιλιάδες instead of δεκατρία).
     # Then append the word "χιλιάδες"
@@ -97,6 +160,26 @@ def _convert_6digit(number: str) -> str:
     _check_input(number, 6)
     if number in _prefixes['6digit'].keys():  # E.g. if we have 400000 then just return "σαράντα χιλιάδες"
         return _prefixes['6digit'][number]
+    # Special case
+    temp_num = number
+    for index, sub_digit in enumerate(number):
+        if sub_digit == "0":
+            temp_num = number[index+1:]
+        else:
+            break
+    number = temp_num
+    if len(number) == 5:
+        return _convert_5digit(number)  # If we had something like 012112 then return the word for 12112
+    if len(number) == 4:
+        return _convert_4digit(number)  # If we had something like 001112 then return the word for 1112
+    if len(number) == 3:
+        return _convert_3digit(number)  # If we had something like 000112 then return the word for 112
+    elif len(number) == 2:
+        return _convert_2digit(number)  # If we had something like 000012 then return the word for 12
+    elif len(number) == 1:
+        return _convert_1digit(number)  # If we had something like 000001 then return the word for 1
+    elif len(number) == 0:
+        return ""  # If we had 00 then return nothing
     # Steps:
     # 1. Check if the number is in the form 000000 (can happen). If so then return nothing
     # 2. At first find the 3 digit prefix -> e.g. from 131789 get the word for 131
@@ -122,11 +205,14 @@ def _convert_more_than7_less_than10_digits(number: str) -> str:
     # --------------------------------- SPECIAL CASE ----------------------------------
     # Special case: if called from a larger number then there is a possibility to have all zeroes
     # E.g. for 3 billion we are going to have a 3 and 9 zeroes after that. We don't want to append "εκκατομυριο" to that
+    temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            number = number[index:]  # e.g. if number=0010000 then it will be converted to 10000
+            temp_num = number[index+1:]  # e.g. if number=0010000 then it will be converted to 10000
         else:
             break
+    number = temp_num
+    # number = re.sub("0", "", temp_num)
     if len(number) == 6:
         out = _convert_6digit(number)
     elif len(number) == 5:
@@ -158,7 +244,7 @@ def _convert_more_than10_less_than13_digits(number: str) -> str:
     _check_input(number, 12, operator="less_equal")
     # There is one special case since 1000000 (1 million) wants singular form
     if len(number) == 10 and number[0] == "1":
-        out = "ένα δισεκατομμύριο " + _convert_6digit(number[1:])
+        out = "ένα δισεκατομμύριο " + _convert_more_than7_less_than10_digits(number[1:])
         return out
     if len(number) == 10:
         out = _convert_1digit(number[0]) + " δισεκατομμύρια " + _convert_more_than7_less_than10_digits(number[1:])
@@ -170,7 +256,8 @@ def _convert_more_than10_less_than13_digits(number: str) -> str:
 
 
 def convert_numbers(word: str) -> str:
-    word = process_sentence(word)
+    word = process_word(word)
+    print(word)
     if not word.isdigit():
         return word
     else:
@@ -195,16 +282,50 @@ def convert_numbers(word: str) -> str:
 
 
 def convert_sentence(sentence: str):
-    # sentence = process_sentence(sentence)
+    sentence = handle_commas(sentence)
+    sentence = process_word(sentence)
     final_sent = []
     for word in sentence.split():
         final_sent.append(convert_numbers(word))
     return " ".join(final_sent)
 
 
+def main():
+    msg = """ Use this script if you want to convert the digits of a file to their equivalent greek words.
+              You may provide a path to a text file containing only the transcript of an audio file and the 
+              contents of it will be replace with so that there are not digits.
+              E.g. If the file contains "100 ευρώ" then it will be converted to "εκατό ευρώ"
+              
+              You may also provide the path to a directory where transcript files are located and the script 
+              will process all of them. Make sure to change the file extension if needed since the default 
+              one is .lab. 
+              
+              NOTE: The files are replaced so please be careful to have a copy of the original ones before
+              you run this script.
+            
+          """
+    parser = argparse.ArgumentParser(description=msg)
+    parser.add_argument("-p", "--path", required=True,
+                        help="Path to a file or a directory containing the text files.")
+    parser.add_argument("-e", "--extension", required=False, default=".lab",
+                        help="Extension of the text files containing the transcripts.")
+    args = parser.parse_args()
+    # ---------------------- CHECK IF INPUT IS DIR OR FILE ---------------------------
+    filepath = args.path
+    if os.path.isfile(filepath):
+        # Create temporary file which will replace the old one.
+        fh, abs_path = mkstemp()
+        with os.fdopen(fh, 'w') as newf:
+            with open(filepath, "r", encoding="utf-8") as f:
+                text = f.read()
+                text = convert_sentence()
+
+
 if __name__ == '__main__':
-    test = "είχα 113 ευρώ και έγιναν 9. Πιο παλιά είχα 2184$. Ένας άλλος είχε 113914 ευρώ. ο μέσσι παίρνει " \
+    # main()
+    test = "είχα 113,5 ευρώ και έγιναν 9. Πιο παλιά είχα 2184$. Ένας άλλος είχε 113914 ευρώ. ο μέσσι παίρνει " \
            "30000000 τον χρόνο. άρα σε 100 χρόνια θα μαζέψει 3000000000 ευρώ."
-    # test = "3000000000"
-    # test = "30000000"
+    # test = "300000000001"
+    # test = "102,45"
+
     print(convert_sentence(test))

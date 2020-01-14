@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "g2p-greek"
-version = "0.1.0"
-description = "The description of the package"
+version = "0.0.1"
+description = "Grapheme to Phoneme Conversion for Greek."
 
 authors = [
     "Karakasidis Georgios <george.karakasides@gmail.com>"
@@ -9,16 +9,16 @@ authors = [
 
 readme = 'README.md'  # Markdown files are supported
 
-repository = "https://github.com/python-poetry/poetry"
-homepage = "https://github.com/python-poetry/poetry"
+repository = "https://github.com/geoph9/GraphemeToPhoneme-Greek"
+homepage = "https://github.com/geoph9/GraphemeToPhoneme-Greek"
 
-keywords = ['packaging', 'poetry']
+keywords = ['packaging', 'poetry', 'g2p-greek']
 
 [tool.poetry.dependencies]
 python = "^3.5"  # Compatible python versions must be declared here
 toml = "^0.9"
 # Dependencies with extras
-requests = { version = "^2.13", extras = [ "security" ] }
+#requests = { version = "^2.13", extras = [ "security" ] }
 # Python specific dependencies with prereleases allowed
 #pathlib2 = { version = "^2.2", python = "~2.7", allow-prereleases = true }
 # Git dependencies

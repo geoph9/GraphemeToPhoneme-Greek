@@ -1,3 +1,31 @@
+"""
+    Description: There are 3 parsers and all of them are mixed into a single super parser. This script contains two
+                 modes.
+                 1. In the first one you can pass a text file containing all of the words that appear in your
+                    dataset (e.g. in the kaldi 'text' file). In this case, you need to provide the path to the words
+                    file and the path to the lexicon file based on which the word phonemes will be computer. I.e.
+                    for each word, if the word exists in the lexicon (e.g. in the cmu sphinx lexicon) then the
+                    phonemes will be calculated from that. Otherwise, the phonemes will be calculated from the
+                    algorithm above.
+
+                 2. In the second mode you can pass a path to a text file that contains only the unknown words ->
+                    a.k.a the words that do not exist in the original lexicon. The algorithm above will compute
+                    the phonemes of the words based on the rules explained in the comments.
+                    This mode may also come handy if you don't want to loose time loading the original lexicon
+                    everytime you want to compute the phonemes of a word. Though, note that the phonemes are not
+                    always the same as the ones in the el-gr.dic lexicon provided by cmu_sphinx. This is because
+                    some words in the lexicon contain consecutive vowels such as αααα but the algorithm above
+                    replaces them with single vowels (so αααα will be replaced with α). This may make sense for
+                    some words but it may cause problems with others so we advice using this mode only when you
+                    don't have words with consecutive consonants.
+
+                For testing purposes you may also use the -t flag (--test-word) followed by a word and check its
+                output.
+
+                IMPORTANT: The phoneme structure should be the same as the one in the greek lexicon of cmu sphinx.
+                           Check the rules.py to view all of the available phonemes.
+"""
+
 import argparse
 
 import os
@@ -6,7 +34,8 @@ import sys
 
 import re
 from rules import *
-from utils import process_sentence, _check_dir, InvalidPathError
+from utils import process_word, _check_dir, InvalidPathError, handle_commas
+from digits_to_words import convert_numbers
 
 from typing import Tuple
 
@@ -53,14 +82,14 @@ def _check_diphthongs(word: str, current_phonemes: list) -> Tuple[str, list]:
                 FOUND_DIPHTHONG = True
             else:
                 continue
-            new_phonemes = []  # [""] * len(phonemes)
             for (start_index, end_index) in occurrences:
+                new_phonemes = []  # [""] * len(phonemes)
                 for phon_id in range(len(current_phonemes)):
                     if start_index <= phon_id <= end_index:
                         new_phonemes.append(phoneme)  # we will end up wil gh i0 i0 a1
                     else:
                         new_phonemes.append(current_phonemes[phon_id])
-            current_phonemes = new_phonemes
+                current_phonemes = new_phonemes
     # If we haven't found any diphthong then ignore the replacement
     if not FOUND_DIPHTHONG:
         return word, current_phonemes
@@ -113,6 +142,21 @@ def _sanity_check(phonemes: list):
     return new_phonemes
 
 
+def preprocess_and_convert_nums(word):
+    word = handle_commas(word)
+    # ----- BASIC PROCESSING -----
+    word = process_word(word)
+    # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
+    new_word = ""
+    for sub_word in word.split():
+        if sub_word.isdigit():
+            new_word += convert_numbers(sub_word) + " "
+        else:
+            new_word += sub_word + " "
+    new_word = re.sub(r"\s+", " ", new_word)
+    return new_word
+
+
 def convert_word(word: str) -> Tuple[str, list]:
     """
     Gets a word and returns the word followed by its phonemes.
@@ -125,6 +169,8 @@ def convert_word(word: str) -> Tuple[str, list]:
         4. Sanity check to convert special cases
     """
     print("Initial word:", word)
+    if word.strip().isdigit():
+        word = convert_numbers(word)
     word, current_phonemes = _check_single_chars(word)
     # Since ψ is the only letter that matches to two phonemes we will replace it explicitely
     new_word = re.sub("ψ", "πσ", word)
@@ -161,7 +207,7 @@ def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
         out_lines: list = []
         for word in lines:
             word = str(word.split()[0]).strip()
-            word = process_sentence(word)
+            word = preprocess_and_convert_nums(word)
             word, current_phones = convert_word(word)  # Get word and phonemes
             out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
     with open(out_path, "w", encoding="utf-8") as fw:
@@ -181,7 +227,7 @@ def _lexicon_lookup(path_to_lexicon: str, N=3):
         if key in lexicon_dict.keys():
             lexicon_dict[key].append(word_to_phoneme)
         else:
-            lexicon_dict[key] = [word_to_phoneme]
+            lexicon_dict[key] = word_to_phoneme
     return lexicon_dict
 
 
@@ -197,57 +243,45 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
     with open(path_to_words_txt, "r", encoding="utf-8") as fr:
         lines = fr.readlines()
         out_lines: list = []
-        for word in lines:
-            word = str(word.split()[0]).strip()
-            word = process_sentence(word)
-            key = word[:N]
-            if key in lexicon_dict.keys():
-                if word in lexicon_dict[key].keys():
-                    out_lines.append(word + " " + lexicon_dict[key][word] + "\n")
+        for initial_word in lines:
+            word = str(initial_word.split()[0]).strip()
+            word = preprocess_and_convert_nums(word)
+            # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
+            for sub_word in word.split():
+                key = sub_word[:N]
+                if key in lexicon_dict.keys():
+                    if sub_word in lexicon_dict[key].keys():
+                        out_lines.append(sub_word + " " + lexicon_dict[key][sub_word] + "\n")
+                    else:
+                        sub_word, current_phones = convert_word(sub_word)  # Get word and phonemes
+                        out_lines.append(sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
                 else:
-                    word, current_phones = convert_word(word)  # Get word and phonemes
-                    out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
-            else:
-                word, current_phones = convert_word(word)  # Get word and phonemes
-                out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+                    sub_word, current_phones = convert_word(sub_word)  # Get word and phonemes
+                    out_lines.append(sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
     with open(out_path, "w", encoding="utf-8") as fw:
         fw.writelines(out_lines)
 
 
 def main():
-    """
-        Description: There are 3 parsers and all of them are mixed into a single super parser. This script contains two
-                     modes.
-                     1. In the first one you can pass a text file containing all of the words that appear in your
-                        dataset (e.g. in the kaldi 'text' file). In this case, you need to provide the path to the words
-                        file and the path to the lexicon file based on which the word phonemes will be computer. I.e.
-                        for each word, if the word exists in the lexicon (e.g. in the cmu sphinx lexicon) then the
-                        phonemes will be calculated from that. Otherwise, the phonemes will be calculated from the
-                        algorithm above.
+    """ If you have a list of words and you don't know if the words exists in the lexicon file or not then use the
+        following.
+        Usage: python g2p_own_rules.py --path-to-words-txt /home/user/data/all_words.txt
+                                       --path-to-lexicon /home/user/data/lexicon/el-gr.dic
+                                       --out-path /home/user/project/output_words.txt
 
-                     2. In the second mode you can pass a path to a text file that contains only the unknown words ->
-                        a.k.a the words that do not exist in the original lexicon. The algorithm above will compute
-                        the phonemes of the words based on the rules explained in the comments.
-                        This mode may also come handy if you don't want to loose time loading the original lexicon
-                        everytime you want to compute the phonemes of a word. Though, note that the phonemes are not
-                        always the same as the ones in the el-gr.dic lexicon provided by cmu_sphinx. This is because
-                        some words in the lexicon contain consecutive vowels such as αααα but the algorithm above
-                        replaces them with single vowels (so αααα will be replaced with α). This may make sense for
-                        some words but it may cause problems with others so we advice using this mode only when you
-                        don't have words with consecutive consonants.
+        If you have a list of words and you are sure that these don't exist in the lexicon file then use this instead:
+        Usage: python g2p_own_rules.py --path-to-unknown-words /home/user/data/non_lexicon_words.txt
+                                       --out-path /home/user/project/output_words.txt
 
-                    For testing purposes you may also use the -t flag (--test-word) followed by a word and check its
-                    output.
-
-                    IMPORTANT: The phoneme structure should be the same as the one in the greek lexicon of cmu sphinx.
-                               Check the rules.py to view all of the available phonemes.
+        The latter is NOT recommended and you should do this only if you don't want to use the lexicon since it can
+        be time consuming because we are loading the whole lexicon into the memory.
     """
     general_parser = argparse.ArgumentParser(
         description="For testing purposes you may use the --test-word argument followed by a single of words.",
         add_help=False
     )
     general_parser.add_argument("-o", "--out-path", required=False, default="./data/el-gr.dic",
-                                action=InvalidPathError,
+                                # action=InvalidPathError,
                                 help="Output path for the new lexicon (containing words and phonemes).")
     general_parser.add_argument("-t", "--test-word", required=False, default="",
                                 help="A word (or sequence of words to be used for testing).")
@@ -265,7 +299,8 @@ def main():
     full_words_parser.add_argument("-w", "--path-to-words-txt", required=False, default=".", action=InvalidPathError,
                                    help="Path to the words.txt file (or any other name) that contains all of the words"
                                         "that appear in our data (e.g. in the kaldi text file).")
-    full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default=".", action=InvalidPathError,
+    full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default="./data/el-gr.dic",
+                                   action=InvalidPathError,
                                    help="Path to the lexicon containing the already known phonemes of all words "
                                         "that appear in the words.txt file above.")
     unknown_words_parser = argparse.ArgumentParser(
@@ -288,15 +323,28 @@ def main():
     full_words_args, _ = full_words_parser.parse_known_args()
     unknown_words_args, _ = unknown_words_parser.parse_known_args()
 
-    # If there is a test word then calculate its phonemes
+    # ----------------------- CONVERT TEST WORD -----------------------------
+    # If there is a test word then calculate its phonemes and exit
     if general_args.test_word != "":
-        convert_word(general_args.test_word)
+        word = general_args.test_word
+        print("Initial word:", word)
+        word = preprocess_and_convert_nums(word)
+        print("Processed word:", word)
+        for sub_word in word.split():
+            convert_word(sub_word)
         sys.exit(0)
 
+    # --------------------------- USE LEXICON (RECOMMENDED) -----------------------------------
     # mode 1: Using the cmu lexicon
-    if full_words_args.path_to_words_txt != "." and full_words_args.path_to_lexicon != ".":
-        pass
+    lex_path = full_words_args.path_to_lexicon
+    if full_words_args.path_to_words_txt != "." and os.path.exists(lex_path):
+        convert_from_lexicon(full_words_args.path_to_words_txt, lex_path, general_args.out_path, check_dirs=True)
+        sys.exit(0)
+    else:
+        print("Could not located the lexicon path:", lex_path, ". We are proceeding to use this algorithm for "
+                                                               "all conversions.")
 
+    # ---------------------------------- USE OUR ALGORITHM ---------------------------------
     # mode 2: Do not the lexicon
     if unknown_words_args.path_to_unknown_words != ".":
         convert_file(path_to_file=unknown_words_args.path_to_unknown_words, out_path=general_args.out_path,

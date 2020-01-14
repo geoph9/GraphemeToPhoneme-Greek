@@ -10,7 +10,8 @@ __basic_substitutes = {
     "&": "και",
     "@": "παπάκι",  # ατ
     "#": "δίεση",  # χασταγκ
-
+    "%": "τοις εκατό",
+    ",": "κόμμα"
 }
 
 
@@ -49,8 +50,54 @@ def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
     return out_path
 
 
-def process_sentence(word: str) -> str:
-    word = " ".join([re.sub(key, val, word) for key, val in __basic_substitutes.items()])
+def handle_commas(word: str, comma_symbol=",") -> str:
+    # If , (comma) is not between two numbers then erase it.
+    comma_index = word.find(comma_symbol)
+    while comma_index != -1:
+        if comma_index == 0:
+            word = word[1:]
+        elif comma_index == len(word) - 1:  # if it is the last character
+            if word[comma_index-1].isdigit():
+                word = word.replace(comma_symbol, " κόμμα")  # e.g. if word=102, then we expect another digit after that
+            else:
+                word = word.replace(comma_symbol, "")
+        else:
+            word = re.sub(r"\s+", " ", word)
+            # --------------- Start ignore spaces ---------------
+            # So, for example, if word == 102 , 98 then convert it to 102, 98 and then to 102,98 (remove spaces)
+            if word[comma_index-1] == " ":
+                word = word[:comma_index-1] + word[comma_index:]
+                comma_index -= 1  # The index went one place back
+            try:
+                if word[comma_index+1] == " ":
+                    word = word[:comma_index+1] + word[comma_index+2:]
+            except IndexError:
+                pass
+            # ----------------- End ignore spaces ----------------
+            try:
+                # Check left and right if they are digits
+                if word[comma_index-1].isdigit() and word[comma_index+1].isdigit():
+                    # if word=2,98 then convert it to δυο κόμμα ενενήντα οχτώ (keep the comma since it is pronounced)
+                    word = word[:comma_index] + " κόμμα " + word[comma_index+1:]
+                else:
+                    # Otherwise, delete the comma
+                    word = word[:comma_index] + " " + word[comma_index+1:]
+            except IndexError:
+                # Otherwise, delete the comma
+                word = word[comma_index-1]
+                break
+        comma_index = word.find(comma_symbol)
+    return word
+
+
+def process_word(word: str) -> str:
+    # if word in __basic_substitutes.keys():
+    #     word = __basic_substitutes[word]
+    word = word.lower()
+    for key, val in __basic_substitutes.items():
+        if key in word:
+            word = re.sub(key, " " + val + " ", word)
+    # word = " ".join([re.sub(key, val, word) for key, val in __basic_substitutes.items()])
     word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
     word = re.sub(r"\s+", " ", word).strip()  # Remove redundant spaces
     return word
