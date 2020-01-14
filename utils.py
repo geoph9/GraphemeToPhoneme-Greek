@@ -15,6 +15,9 @@ __basic_substitutes = {
 }
 
 
+punctuation = [";", "!"]
+
+
 def _read_in_chunks(file_object, chunk_size=2048):
     """
     Lazy function to read a file piece by piece.
@@ -90,15 +93,21 @@ def handle_commas(word: str, comma_symbol=",") -> str:
     return word
 
 
-def process_word(word: str) -> str:
-    # if word in __basic_substitutes.keys():
-    #     word = __basic_substitutes[word]
-    word = word.lower()
+def process_word(word: str, remove_unknown_chars: bool = True, to_lower: bool = True) -> str:
+    if to_lower:
+        word = word.lower()
     for key, val in __basic_substitutes.items():
-        if key in word:
-            word = re.sub(key, " " + val + " ", word)
-    # word = " ".join([re.sub(key, val, word) for key, val in __basic_substitutes.items()])
-    word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
+        if key in word.lower():
+            word = re.sub(key, " " + val + " ", word.lower())
+    if remove_unknown_chars:
+        word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
+    else:
+        word = re.sub(r"\.", " . ", word)
+        word = re.sub(r"\?", " ? ", word)
+        word = re.sub(r"\n", " \n ", word)
+        word = re.sub(r"\t", " \t ", word)
+        for char in punctuation:
+            word = re.sub(char, " " + char + " ", word)
     word = re.sub(r"\s+", " ", word).strip()  # Remove redundant spaces
     return word
 

@@ -1,10 +1,14 @@
 import argparse
+
+import sys
+
 import os
+import glob
 from tempfile import mkstemp
 from shutil import move
 
 import re
-from utils import process_word, handle_commas
+from utils import process_word, handle_commas, punctuation
 
 from prefixes import _prefixes
 
@@ -255,11 +259,11 @@ def _convert_more_than10_less_than13_digits(number: str) -> str:
     return out.strip()
 
 
-def convert_numbers(word: str) -> str:
-    word = process_word(word)
-    print(word)
+def convert_numbers(initial_word: str) -> str:
+    word = process_word(initial_word)
+    # print(word)
     if not word.isdigit():
-        return word
+        return initial_word
     else:
         if len(word) == 1:
             return _convert_1digit(word)
@@ -283,11 +287,44 @@ def convert_numbers(word: str) -> str:
 
 def convert_sentence(sentence: str):
     sentence = handle_commas(sentence)
-    sentence = process_word(sentence)
+    # sentence = re.sub(r"\.", " . ", sentence)
+    sentence = process_word(sentence, remove_unknown_chars=False, to_lower=False)
     final_sent = []
     for word in sentence.split():
         final_sent.append(convert_numbers(word))
-    return " ".join(final_sent)
+    # Concatenate punctuation (e.g. from "they had 9 . the others had 10 ." to "they had nine. the others had 10.")
+    final_sent = " ".join(final_sent)
+    final_sent = re.sub(r"\s\.", ".", final_sent)
+    final_sent = re.sub(r"\s\?", "?", final_sent)
+    final_sent = re.sub(r"\s\n", "\n", final_sent)
+    final_sent = re.sub(r"\s\t", "\t", final_sent)
+    for char in punctuation:
+        final_sent = re.sub(" " + char, char, final_sent)
+    final_sent = re.sub(r"\s+", " ", final_sent)
+    return final_sent
+
+
+def _replace_file_contents(filepath: str):
+    """
+        Args:
+            filepath: The path to the file for which you want to change the numbers to words.
+        Returns:
+            Nothing
+    """
+    # ------------------------ CHECK IF FILE EXISTS ---------------------------
+    if not os.path.exists(filepath):
+        raise FileNotFoundError("Could not locate the path that you provided:", filepath)
+    # ----------------------------- REPLACE FILE -------------------------------
+    # Create temporary file which will replace the old one.
+    fh, abs_path = mkstemp()
+    with os.fdopen(fh, 'w') as newf:
+        with open(filepath, "r", encoding="utf-8") as f:
+            text = convert_sentence(f.read())
+            newf.write(text)
+    # Remove old file
+    os.remove(filepath)
+    # Move new file
+    move(abs_path, filepath)
 
 
 def main():
@@ -300,32 +337,55 @@ def main():
               will process all of them. Make sure to change the file extension if needed since the default 
               one is .lab. 
               
+              If you want to test the script then you may use the -t argument and provide a single word.
+              
               NOTE: The files are replaced so please be careful to have a copy of the original ones before
               you run this script.
             
           """
     parser = argparse.ArgumentParser(description=msg)
-    parser.add_argument("-p", "--path", required=True,
+    parser.add_argument("-p", "--path", required=False, default="./files/",
                         help="Path to a file or a directory containing the text files.")
     parser.add_argument("-e", "--extension", required=False, default=".lab",
                         help="Extension of the text files containing the transcripts.")
+    parser.add_argument("-t", "--test-word", required=False, default="NONE",
+                        help="A test word in order to test the functionality of the script.")
     args = parser.parse_args()
-    # ---------------------- CHECK IF INPUT IS DIR OR FILE ---------------------------
+    if args.test_word != "NONE":
+        print(convert_sentence(args.test_word))
+        print("Converted test word, now exiting...")
+        sys.exit(1)
     filepath = args.path
+    if filepath == "./files/":
+        print("Using the default filepath:", filepath, ". If you want to use another "
+                                                       "path do so by using the "
+                                                       "--path argument.")
+    # ------------------------ CASE 1: INPUT IS FILE ---------------------------
     if os.path.isfile(filepath):
         # Create temporary file which will replace the old one.
-        fh, abs_path = mkstemp()
-        with os.fdopen(fh, 'w') as newf:
-            with open(filepath, "r", encoding="utf-8") as f:
-                text = f.read()
-                text = convert_sentence()
+        _replace_file_contents(filepath)
+        print("Success!")
+        print("Done processing file from the file:", filepath)
+        sys.exit(1)
+    # ------------------------ CASE 2: INPUT IS DIR ---------------------------
+    if os.path.isdir(filepath):
+        text_file_dir = glob.glob(os.path.join(filepath, "*" + args.extension))
+        if len(text_file_dir) == 0:
+            raise ValueError("The directory that you provided is empty")
+        for text_file in text_file_dir:
+            _replace_file_contents(text_file)
+        print("Success!")
+        print("Done processing files from the directory:", filepath)
+        sys.exit(1)
+    print("Error")
+    print("Something happened and there were no changes made...")
 
 
 if __name__ == '__main__':
-    # main()
-    test = "είχα 113,5 ευρώ και έγιναν 9. Πιο παλιά είχα 2184$. Ένας άλλος είχε 113914 ευρώ. ο μέσσι παίρνει " \
-           "30000000 τον χρόνο. άρα σε 100 χρόνια θα μαζέψει 3000000000 ευρώ."
-    # test = "300000000001"
-    # test = "102,45"
-
-    print(convert_sentence(test))
+    main()
+    # test = "είχα 113,5 ευρώ και έγιναν 9; Πιο παλιά είχα 2184$. Ένας άλλος είχε 113914 ευρώ. ο μέσσι παίρνει " \
+    #        "30000000 τον χρόνο. άρα σε 100 χρόνια θα μαζέψει 3000000000 ευρώ."
+    # # test = "300000000001"
+    # # test = "102,45"
+    #
+    # print(convert_sentence(test))

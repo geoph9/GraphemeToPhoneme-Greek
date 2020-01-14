@@ -265,12 +265,12 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
 def main():
     """ If you have a list of words and you don't know if the words exists in the lexicon file or not then use the
         following.
-        Usage: python g2p_own_rules.py --path-to-words-txt /home/user/data/all_words.txt
+        Usage: python g2p_greek.py --path-to-words-txt /home/user/data/all_words.txt
                                        --path-to-lexicon /home/user/data/lexicon/el-gr.dic
                                        --out-path /home/user/project/output_words.txt
 
         If you have a list of words and you are sure that these don't exist in the lexicon file then use this instead:
-        Usage: python g2p_own_rules.py --path-to-unknown-words /home/user/data/non_lexicon_words.txt
+        Usage: python g2p_greek.py --path-to-unknown-words /home/user/data/non_lexicon_words.txt
                                        --out-path /home/user/project/output_words.txt
 
         The latter is NOT recommended and you should do this only if you don't want to use the lexicon since it can
@@ -291,7 +291,7 @@ def main():
                     "followed by their phonemes. For each word, if it exists in the original cmu_sphinx lexicon then "
                     "the phonemes will be the same as there. Otherwise, the phonemes will be calculated from this "
                     "script."
-                    "\nE.g. python g2p_own_rules.py --path-to-words-txt /home/user/words.txt"
+                    "\nE.g. python g2p_greek.py --path-to-words-txt /home/user/words.txt"
                     "                               --path-to-lexicon /home/user/cmu_sphinx/el-gr.dic"
                     "                               --out-path /home/user/new_lexicon.dic",
         add_help=False
@@ -307,7 +307,7 @@ def main():
         description="Provide a text file with unknown words (words not in lexicon) separated by new lines. There should"
                     "be as many lines as the number of words for which you want to produce the phonemes."
                     "The output will be a text file containing the words followed by their phonemes. See example below."
-                    "\nE.g. python g2p_own_rules.py --path-to-unknown-words /home/user/unknown_words.txt "
+                    "\nE.g. python g2p_greek.py --path-to-unknown-words /home/user/unknown_words.txt "
                     "                               --out-path /home/user/new_lexicon.dic",
         add_help=False
     )
