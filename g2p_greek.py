@@ -194,12 +194,13 @@ def convert_word(word: str) -> Tuple[str, list]:
     if word.strip().isdigit():
         word = convert_numbers(word)
     word, current_phonemes = _check_single_chars(word)
-    # Since ψ is the only letter that matches to two phonemes we will replace it explicitely
+    # Since ψ and ξ match to two phonemes we will replace them explicitely
     new_word = re.sub("ψ", "πσ", word)
+    new_word = re.sub("ξ", "κσ", new_word)
     # There are some letters that are matched to more than one phoneme (e.g. ψ -> p s)
     # We need to make those separate entries for the phonemes list
     current_phonemes = " ".join(current_phonemes).split(" ")
-    word, current_phonemes = _check_diphthongs(new_word, current_phonemes)
+    new_word, current_phonemes = _check_diphthongs(new_word, current_phonemes)
     current_phonemes = " ".join(current_phonemes).split(" ")  # For the same reason as two lines above
     current_phonemes = _sanity_check(current_phonemes)
     print("After sanity check, final output: ", word, " ".join(current_phonemes))
@@ -287,13 +288,13 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
 def main():
     """ If you have a list of words and you don't know if the words exists in the lexicon file or not then use the
         following.
-        Usage: python g2p_greek.py --path-to-words-txt /home/user/data/all_words.txt
-                                       --path-to-lexicon /home/user/data/lexicon/el-gr.dic
-                                       --out-path /home/user/project/output_words.txt
+        Usage: python g2p_greek.py --path-to-words-txt /home/user/data/all_words.txt \
+                                   --path-to-lexicon /home/user/data/lexicon/el-gr.dic \
+                                   --out-path /home/user/project/output_words.txt
 
         If you have a list of words and you are sure that these don't exist in the lexicon file then use this instead:
-        Usage: python g2p_greek.py --path-to-unknown-words /home/user/data/non_lexicon_words.txt
-                                       --out-path /home/user/project/output_words.txt
+        Usage: python g2p_greek.py --path-to-unknown-words /home/user/data/non_lexicon_words.txt \
+                                   --out-path /home/user/project/output_words.txt
 
         The latter is NOT recommended and you should do this only if you don't want to use the lexicon since it can
         be time consuming because we are loading the whole lexicon into the memory.
