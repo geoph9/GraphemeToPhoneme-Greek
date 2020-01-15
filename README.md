@@ -56,7 +56,10 @@ provided a directory.
 
 Example:
 
-`python digits_to_words.py --path /home/user/data/transcriptions -e .txt`
+```
+python digits_to_words.py --path /home/user/data/transcriptions \
+                          --extension .txt
+```
 
 The above will read all the `.txt` files inside the `transcriptions` 
 directory and will change the numbers to their corresponding greek words.
@@ -84,8 +87,8 @@ each new line. Then you can create a file `new_lexicon.dic` which will
 contain the words followed by their phonemes.
 
     ```
-    python g2p_greek.py --path-to-words-txt /home/user/data/words.txt
-                        --path-to-lexicon ./el-gr.dic 
+    python g2p_greek.py --path-to-words-txt /home/user/data/words.txt \
+                        --path-to-lexicon ./el-gr.dic \
                         --out-path /home/user/data/new_lexicon.dic
    ```
     
@@ -112,7 +115,7 @@ you have found the out-of-vocabulary (OOV) words and you want to automatically
 find their phonemes without doing it by hand.
 
     ```
-   python g2p_greek.py --path-to-unknown-words /home/user/data/unknown_words.txt
+   python g2p_greek.py --path-to-unknown-words /home/user/data/unknown_words.txt \
                         --out-path /home/user/data/unknown_words_lexicon.dic
    ```
     NOTE: This will run much faster than the previous one since it does not 
@@ -131,15 +134,25 @@ another one that you created from the `g2p_greek.py` script, then you
 can combine these into one script by using the `sort.py` script. For 
 usage example, check the script.
 
-2. If you have a kaldi `text` file then you can extract a `words.txt`
-file by using the following command: 
+2. If you have a kaldi `text` (check [here](https://kaldi-asr.org/doc/data_prep.html)
+for kaldi data preparation) file then you can extract a `words.txt` file by using the following command: 
     
     `cut -d ' ' -f 2- /home/user/kaldi/egs/greek/data/train/text | sed 's/ /\n/g' | sort -u > words.txt`
     
-    If you want to use the output lexicon for your kaldi recipe then you 
-may run (after extracting the `words.txt` with the command above): 
+    This will take the words that appear after the utterance ids and will separate
+    them with a new line and then sort them in unique order.
+    You can use the output file to create a `lexicon.txt` which is needed in kaldi.
+    So, in order to extract it you may now run:
     ```
-    python g2p_greek.py --path-to-words-txt /home/user/kaldi/egs/greek/data/train/words.txt
-                        --path-to-lexicon /home/user/kaldi/egs/greek/el-gr.dic 
+    python g2p_greek.py --path-to-words-txt /home/user/kaldi/egs/greek/data/train/words.txt \
+                        --path-to-lexicon /home/user/kaldi/egs/greek/el-gr.dic \
                         --out-path /home/user/kaldi/egs/greek/data/local/lang/lexicon.txt
    ```
+  
+
+### Future Work:
+
+1. Handle fractions in `digits_to_words`. E.g. Convert "1/10" to "ένα δέκατο".
+2. Handle time input in `digits_to_words`. E.g. Convert "11:20" to "έντεκα και είκοσι"
+3. Handle english characters in `g2p_greek`. E.g. For the name of the company "Facebook" -> "Φέισμπουκ f e1 i0 s b u0 k"
+4. Generalize better in `g2p_greek`. Cover more special cases.

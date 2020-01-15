@@ -1,3 +1,25 @@
+# MIT License
+#
+# Copyright (c) [year] [fullname]
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import argparse
 
 import sys
@@ -55,8 +77,8 @@ def _convert_2digit(number: str) -> str:
         if sub_digit == "0":
             temp_num = number[index+1:]
         else:
-            number = temp_num
             break
+    number = temp_num
     if len(number) == 1:
         return _convert_1digit(number)  # If we had something like 01 then return the word for 1
     elif len(number) == 0:
@@ -300,6 +322,7 @@ def convert_sentence(sentence: str):
     final_sent = re.sub(r"\s\t", "\t", final_sent)
     for char in punctuation:
         final_sent = re.sub(" " + char, char, final_sent)
+    final_sent = re.sub(":", " ", final_sent)
     final_sent = re.sub(r"\s+", " ", final_sent)
     return final_sent
 

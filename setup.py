@@ -1,22 +1,29 @@
 # -*- coding: utf-8 -*-
 
 import os
+from os import path
+
 from setuptools import setup
 # from distutils.core import setup
 
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+
+here = path.abspath(path.dirname(__file__))
+# Get the long description from the README file
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='g2p-greek',
     version='0.0.1',
-    author='G.Kara',
-    # author_email='B.Gees@gmail.com',
+    author='George Karakasidis',
+    author_email='george.karakasides@gmail.com',
     license='MIT',
     packages=['g2p-greek'],
     description='Grapheme to Phoneme conversion for greek.',
-    long_description='my package long description',
-    keywords='g2p grapheme-to-phoneme g2p_greek numbers-to-words',
+    long_description=long_description,
+    url='https://github.com/geoph9/GraphemeToPhoneme-Greek',
+    keywords=['g2p', 'grapheme-to-phoneme', 'g2p_greek',
+              'g2p greek', 'numbers-to-words', 'number to words greek'],
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',
@@ -31,6 +38,5 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    install_requires=requirements,
-    zip_safe=False
+    include_package_data=True
 )
