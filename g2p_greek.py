@@ -80,7 +80,8 @@ def _check_single_chars(word: str) -> Tuple[str, list]:
         if char in non_characters:
             continue
         if char not in character_rules.keys():
-            raise ValueError("Character: " + char + " could not be found in the list of phonemes.")
+            raise ValueError("Character: " + char + "could not be found in the list of phonemes. It appeared in the "
+                                                    "word: " + word + ".")
         else:
             phonemes.append(character_rules[char])
     return word, phonemes
@@ -228,11 +229,14 @@ def convert_file(path_to_file: str, out_path: str, check_dirs: bool = True):
     with open(path_to_file, "r", encoding="utf-8") as fr:
         lines = fr.readlines()
         out_lines: list = []
-        for word in lines:
-            word = str(word.split()[0]).strip()
+        for initial_word in lines:
+            word = str(initial_word.split()[0]).strip()
             word = preprocess_and_convert_nums(word)
-            word, current_phones = convert_word(word)  # Get word and phonemes
-            out_lines.append(word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+            # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
+            for sub_word in word.split():
+                sub_word = str(sub_word.split()[0]).strip()
+                sub_word, current_phones = convert_word(sub_word)  # Get word and phonemes
+                out_lines.append(sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
     with open(out_path, "w", encoding="utf-8") as fw:
         fw.writelines(out_lines)
 
