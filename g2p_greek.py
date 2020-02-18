@@ -241,7 +241,7 @@ def _lexicon_lookup(path_to_lexicon: str, N=3):
     # Implement a hash lookup keeping N characters as the key
     # IMPORTANT: all words in the lexicon file must be unique (appear only once in the file)
     lexicon_dict: dict = {}
-    for line in fileinput.input([path_to_lexicon]):
+    for line in fileinput.input([path_to_lexicon], openhook=fileinput.hook_encoded("utf-8")):
         word = str(line.split()[0]).strip()
         phonemes = " ".join(line.split()[1:]).replace("\n", "").strip()
         k = N if len(word) < N else len(word)  # Keep N characters if word is at least of length N
@@ -267,6 +267,8 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
         lines = fr.readlines()
         out_lines: list = []
         for initial_word in lines:
+            if initial_word.strip() == "":
+                continue
             word = str(initial_word.split()[0]).strip()
             word = preprocess_and_convert_nums(word)
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
