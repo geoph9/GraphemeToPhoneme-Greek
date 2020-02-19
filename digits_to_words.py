@@ -178,7 +178,7 @@ def _convert_5digit(number: str) -> str:
     # Special case 13 and 14 where there needs to be a certain plural form (δεκατρείς χιλιάδες instead of δεκατρία).
     # Then append the word "χιλιάδες"
     # Then append the 3 digit leftover from _convert_3digit -> e.g. from 78123 get the word for 123
-    out = to_plural(_prefixes['2digit'][number[:2]]) + " χιλιάδες " + _convert_3digit(number[2:])
+    out = to_plural(_convert_2digit(number[:2])) + " χιλιάδες " + _convert_3digit(number[2:])
     return out.strip()
 
 

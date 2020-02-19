@@ -71,7 +71,7 @@ def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
         out_path = os.path.join(out_path, "unknown_phonemes.txt")
     else:
         if not os.path.exists(os.path.dirname(out_path)):
-            raise FileNotFoundError("Could not locate the directory where the output file will be saved.")
+            raise FileNotFoundError("Could not locate the directory where the output file will be saved:", out_path)
     return out_path
 
 
