@@ -87,9 +87,6 @@ def _check_single_chars(word: str) -> Tuple[str, list]:
     for char in word.strip():
         if char in non_characters:
             continue
-        if char.isdigit():
-            print("Found a digit inside a text: {}. We will ignore it and continue.".format(char))
-            continue
         if char not in character_rules.keys():
             raise ValueError("Character: " + char + " could not be found in the list of phonemes. It appeared in the "
                                                     "word: " + word + ".")
@@ -196,7 +193,12 @@ def preprocess_and_convert_nums(word):
         elif sub_word.isdigit():
             new_word += convert_numbers(sub_word) + " "
         else:
-            new_word += sub_word + " "
+            for char in sub_word:
+                if char.isdigit():
+                    print("Found a digit inside a text: {}. We will ignore it and continue.".format(char))
+                    continue
+                new_word += char
+            new_word += " "
     new_word = re.sub(r"\s+", " ", new_word)
     return new_word
 
