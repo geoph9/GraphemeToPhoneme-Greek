@@ -122,6 +122,7 @@ def process_word(word: str, remove_unknown_chars: bool = True, to_lower: bool = 
         if key in word.lower():
             word = re.sub(key, " " + val + " ", word.lower())
     if remove_unknown_chars:
+        word = re.sub(r"•|∙|»", " ", word)
         word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
     else:
         word = re.sub(r"\.", " . ", word)
