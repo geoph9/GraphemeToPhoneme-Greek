@@ -15,7 +15,8 @@ setup(
     url='https://github.com/geoph9/GraphemeToPhoneme-Greek',
     keywords=['g2p', 'grapheme-to-phoneme', 'g2p_greek', 'digit to word',
               'g2p greek', 'numbers-to-words', 'number to words greek',
-              'digit to word greek', 'convert digits to words in greek'],
+              'digit to word greek', 'convert digits to words in greek',
+              ],
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',
