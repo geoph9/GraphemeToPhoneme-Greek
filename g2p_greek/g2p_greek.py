@@ -343,7 +343,7 @@ def main():
         description="For testing purposes you may use the --test-word argument followed by a single of words.",
         add_help=False
     )
-    general_parser.add_argument("-o", "--out-path", required=False, default="./data/el-gr.dic",
+    general_parser.add_argument("-o", "--out-path", required=False, default="../data/el-gr.dic",
                                 # action=InvalidPathError,
                                 help="Output path for the new lexicon (containing words and phonemes).")
     general_parser.add_argument("-t", "--test-word", required=False, default="",
@@ -362,14 +362,14 @@ def main():
                     "the phonemes will be the same as there. Otherwise, the phonemes will be calculated from this "
                     "script."
                     "\nE.g. python g2p_greek.py --path-to-words-txt /home/user/words.txt"
-                    "                               --path-to-lexicon /home/user/cmu_sphinx/el-gr.dic"
-                    "                               --out-path /home/user/new_lexicon.dic",
+                    "                           --path-to-lexicon /home/user/cmu_sphinx/el-gr.dic"
+                    "                           --out-path /home/user/new_lexicon.dic",
         add_help=False
     )
     full_words_parser.add_argument("-w", "--path-to-words-txt", required=False, default=".", action=InvalidPathError,
                                    help="Path to the words.txt file (or any other name) that contains all of the words"
                                         "that appear in our data (e.g. in the kaldi text file).")
-    full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default="./data/el-gr.dic",
+    full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default="../data/el-gr.dic",
                                    action=InvalidPathError,
                                    help="Path to the lexicon containing the already known phonemes of all words "
                                         "that appear in the words.txt file above.")

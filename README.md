@@ -29,6 +29,20 @@ Feel free to change it and adjust it to your needs, though you must
 be careful, since, as I said, the code has not been tested in different
 corpora.
 
+## Installation:
+
+In order to install this repository as a package, do the following:
+
+```
+git clone https://github.com/geoph9/GraphemeToPhoneme-Greek.git
+cd GraphemeToPhoneme-Greek
+pip install -e .
+```
+
+If no error occurs then you are fine. To make sure, you may run: 
+`python -c "import g2p_greek"`. If that works, then you may use 
+this repo as a package.
+
 ### The `digits_to_words.py` script:
 This script contains functionality to convert numbers to their
 corresponding words in Greek. It only handles positive numbers 
