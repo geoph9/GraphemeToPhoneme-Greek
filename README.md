@@ -84,6 +84,8 @@ python digits_to_words.py --path /home/user/data/transcriptions \
 The above will read all the `.txt` files inside the `transcriptions` 
 directory and will change the numbers to their corresponding greek words.
 
+---
+
 ### The `g2p_greek.py` script:
 This script contains functionality to find the phonemes of greek words.
 The algorithms uses only rules and does not need anything to learn. Since 
@@ -148,7 +150,7 @@ in `g2p_own_rules.py`.
 
 ---
 
-#### Special cases:
+### Special cases:
 1. If you have 2 dictionaries, let's say the original `el-gr.dic` and 
 another one that you created from the `g2p_greek.py` script, then you 
 can combine these into one script by using the `sort.py` script. For 
@@ -169,8 +171,20 @@ for kaldi data preparation) file then you can extract a `words.txt` file by usin
                         --out-path /home/user/kaldi/egs/greek/data/local/lang/lexicon.txt
    ```
   
+## Handling English Words
 
-### Future Work:
+This is not as easy as it may seem. Most importantly, the phonemes that represent Greek words 
+and the ones that represent English words are different (when looking at the CMU 
+dictionaries). This means that we should recreate an English lexicon from scratch 
+which is really hard because English words are rarely pronounced the way they are 
+written. 
+
+Currently, we are only offer a 1-1 character per character conversion, meaning that 
+each latin character is mapped into on greek character. Check `english_rules.py` in 
+order to see these mappings. This is really naive and, of course, does not work efficiently.
+It is just a way to avoid errors and definitely not a permanent solution.
+
+## Future Work:
 
 1. Handle fractions in `digits_to_words`. E.g. Convert "1/10" to "ένα δέκατο".
 2. Handle time input in `digits_to_words`. E.g. Convert "11:20" to "έντεκα και είκοσι"
