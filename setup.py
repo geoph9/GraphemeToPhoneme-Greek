@@ -8,7 +8,6 @@ setup(
     name='g2p_greek',
     version='0.0.1',
     author='George Karakasidis',
-    author_email='george.karakasides@gmail.com',
     license='MIT',
     packages=find_packages(),
     description='Grapheme to Phoneme and Digit to Word conversion for Greek texts.',

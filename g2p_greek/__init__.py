@@ -19,7 +19,6 @@ import g2p_greek.digits_to_words
 __title__ = 'g2p_greek'
 __version__ = '0.0.1'
 __author__ = 'George Karakasidis'
-__email__ = 'george.karakasides@gmail.com'
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
