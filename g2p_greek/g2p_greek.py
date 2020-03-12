@@ -57,12 +57,12 @@ import fileinput
 import sys
 
 import re
-from rules import *
-from utils import process_word, _check_dir, InvalidPathError, handle_commas
-from digits_to_words import convert_numbers
+from g2p_greek.rules import *
+from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas
+from g2p_greek.digits_to_words import convert_numbers
 
 try:
-    from english_rules import english_mappings
+    from g2p_greek.english_rules import english_mappings
 except ImportError:
     english_mappings = {}
     pass

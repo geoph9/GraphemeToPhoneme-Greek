@@ -18,10 +18,16 @@ from the greek lexicon provided at the CMU Sphinx website
 The lexicon is already downloaded in the `./data/` folder so 
 you don't need to re-download it if you have cloned this repo.
 
-*NOTE:* This is not 100% accurate and it may lead to mistakes. 
+*NOTE 1:* This is not 100% accurate and it may lead to mistakes. 
 After using the scripts please check the output in order to 
 make sure that everything went well since there is a chance 
 that you may need to change something by hand.
+
+*NOTE 2:* This repository has been created in order to help me 
+handle out of vocabulary (OOV) words while creating a kaldi model.
+Feel free to change it and adjust it to your needs, though you must 
+be careful, since, as I said, the code has not been tested in different
+corpora.
 
 ### The `digits_to_words.py` script:
 This script contains functionality to convert numbers to their
