@@ -18,10 +18,36 @@ from the greek lexicon provided at the CMU Sphinx website
 The lexicon is already downloaded in the `./data/` folder so 
 you don't need to re-download it if you have cloned this repo.
 
-*NOTE:* This is not 100% accurate and it may lead to mistakes. 
+*NOTE 1:* This is not 100% accurate and it may lead to mistakes. 
 After using the scripts please check the output in order to 
 make sure that everything went well since there is a chance 
 that you may need to change something by hand.
+
+*NOTE 2:* This repository has been created in order to help me 
+handle out of vocabulary (OOV) words while creating a kaldi model.
+Feel free to change it and adjust it to your needs, though you must 
+be careful, since, as I said, the code has not been tested in different
+corpora.
+
+## Installation:
+
+In order to install this repository as a package, do the following:
+
+```
+git clone https://github.com/geoph9/GraphemeToPhoneme-Greek.git
+cd GraphemeToPhoneme-Greek
+pip install -e .
+```
+
+If no error occurs then you are fine. To make sure, you may run: 
+`python -c "import g2p_greek"`. If that works, then you may use 
+this repo as a package.
+
+## How to use
+
+There are tho main scripts which you should use (though feel free to make any other 
+changes). Below, I will try to give a brief introduction on the main points of these 
+scripts. 
 
 ### The `digits_to_words.py` script:
 This script contains functionality to convert numbers to their
@@ -30,7 +56,8 @@ corresponding words in Greek. It only handles positive numbers
 handle decimals. It is important to note that this algorithm does 
 not take into account the gender of the noun following each number.
 Also, the numbers will be converted as is and there is **no** 
-post-processing like "2.5 ευρώ" -> "δυόμιση ευρώ".
+post-processing like "2.5 ευρώ" -> "δυόμιση ευρώ" (the output 
+will be "δύο κόμμα πέντε ευρώ").
 
 If you only need to convert numbers to words then you may use this 
 script as described below:
@@ -63,6 +90,8 @@ python digits_to_words.py --path /home/user/data/transcriptions \
 
 The above will read all the `.txt` files inside the `transcriptions` 
 directory and will change the numbers to their corresponding greek words.
+
+---
 
 ### The `g2p_greek.py` script:
 This script contains functionality to find the phonemes of greek words.
@@ -124,11 +153,13 @@ find their phonemes without doing it by hand.
 
 
 A more detailed description of the algorithm can be found 
-in `g2p_own_rules.py`.
+in `g2p_own_rules.py`. It is well documented and also offers some 
+utilities for shell-command running (this mostly has to do with how 
+you want to handle the output and the print statements).
 
 ---
 
-#### Special cases:
+### Special cases:
 1. If you have 2 dictionaries, let's say the original `el-gr.dic` and 
 another one that you created from the `g2p_greek.py` script, then you 
 can combine these into one script by using the `sort.py` script. For 
@@ -149,8 +180,20 @@ for kaldi data preparation) file then you can extract a `words.txt` file by usin
                         --out-path /home/user/kaldi/egs/greek/data/local/lang/lexicon.txt
    ```
   
+## Handling English Words
 
-### Future Work:
+This is not as easy as it may seem. Most importantly, the phonemes that represent Greek words 
+and the ones that represent English words are different (when looking at the CMU 
+dictionaries). This means that we should recreate an English lexicon from scratch 
+which is really hard because English words are rarely pronounced the way they are 
+written. 
+
+Currently, we are only offer a 1-1 character per character conversion, meaning that 
+each latin character is mapped into on greek character. Check `english_rules.py` in 
+order to see these mappings. This is really naive and, of course, does not work efficiently.
+It is just a way to avoid errors and definitely not a permanent solution.
+
+## Future Work:
 
 1. Handle fractions in `digits_to_words`. E.g. Convert "1/10" to "ένα δέκατο".
 2. Handle time input in `digits_to_words`. E.g. Convert "11:20" to "έντεκα και είκοσι"

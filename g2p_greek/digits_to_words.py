@@ -30,9 +30,9 @@ from tempfile import mkstemp
 from shutil import move
 
 import re
-from utils import process_word, handle_commas, punctuation
+from g2p_greek.utils import process_word, handle_commas, punctuation
 
-from prefixes import _prefixes
+from g2p_greek.prefixes import _prefixes
 
 
 to_plural = lambda word: re.sub("ερα", "ερις", re.sub("τρία", "τρείς", word))  # for 13 and 14 special cases in plural
