@@ -43,6 +43,12 @@ If no error occurs then you are fine. To make sure, you may run:
 `python -c "import g2p_greek"`. If that works, then you may use 
 this repo as a package.
 
+## How to use
+
+There are tho main scripts which you should use (though feel free to make any other 
+changes). Below, I will try to give a brief introduction on the main points of these 
+scripts. 
+
 ### The `digits_to_words.py` script:
 This script contains functionality to convert numbers to their
 corresponding words in Greek. It only handles positive numbers 
@@ -50,7 +56,8 @@ corresponding words in Greek. It only handles positive numbers
 handle decimals. It is important to note that this algorithm does 
 not take into account the gender of the noun following each number.
 Also, the numbers will be converted as is and there is **no** 
-post-processing like "2.5 ευρώ" -> "δυόμιση ευρώ".
+post-processing like "2.5 ευρώ" -> "δυόμιση ευρώ" (the output 
+will be "δύο κόμμα πέντε ευρώ").
 
 If you only need to convert numbers to words then you may use this 
 script as described below:
@@ -146,7 +153,9 @@ find their phonemes without doing it by hand.
 
 
 A more detailed description of the algorithm can be found 
-in `g2p_own_rules.py`.
+in `g2p_own_rules.py`. It is well documented and also offers some 
+utilities for shell-command running (this mostly has to do with how 
+you want to handle the output and the print statements).
 
 ---
 
