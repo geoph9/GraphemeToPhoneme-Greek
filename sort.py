@@ -18,7 +18,7 @@ def main():
             python sort.py unknown_words_lexicon.dic ./el-gr.dic > tmp
             mv tmp ./el-gr.dic
     """
-    lines = frozenset(l.rstrip() for l in fileinput.input())  # accumulate
+    lines = frozenset(l.rstrip() for l in fileinput.input(openhook=fileinput.hook_encoded("utf-8")))  # accumulate
     print("\n".join(sorted(lines)))                           # linearize
 
 
