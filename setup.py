@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Get the long description from the README file
 with open('README.md', encoding='utf-8') as f:
@@ -10,7 +10,7 @@ setup(
     author='George Karakasidis',
     author_email='george.karakasides@gmail.com',
     license='MIT',
-    packages=['g2p-greek'],
+    packages=find_packages(),
     description='Grapheme to Phoneme and Digit to Word conversion for Greek texts.',
     long_description=long_description,
     url='https://github.com/geoph9/GraphemeToPhoneme-Greek',
