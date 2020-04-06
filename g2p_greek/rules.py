@@ -69,7 +69,9 @@ diphthong_rules: dict = {
     "κι": "kj",
     "τσ": "ts",
     "ια": "j a0",
-    "ιά": "j a1"
+    "ιά": "j a1",
+    "ιο": "i o0",
+    "ιό": "i o1"
 }
 
 triphthong_rules: dict = {
