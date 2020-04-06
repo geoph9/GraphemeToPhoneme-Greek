@@ -351,8 +351,8 @@ def main():
     general_parser.add_argument("-sh", '--shell-command', action='store_true', dest='is_shell_command',
                                 help='If true then we assume that you are calling this script from a shell command '
                                      '(i.e. a bash script). In this case, the output will be returned and printed '
-                                     'in the console so that you can redirect it to where you wish. If this is provided '
-                                     'the out-path argument does not matter since the output file will be defined in '
+                                     'in the console so that you can redirect it to where you wish. If this is provided'
+                                     ' the out-path argument does not matter since the output file will be defined in '
                                      'the bash script')
     general_parser.set_defaults(is_shell_command=False)
     full_words_parser = argparse.ArgumentParser(
