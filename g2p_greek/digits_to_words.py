@@ -350,6 +350,24 @@ def _replace_file_contents(filepath: str):
     move(abs_path, filepath)
 
 
+def convert_kaldi_text(kaldi_text_path):
+    assert os.path.isfile(kaldi_text_path), "Path to the kaldi text file does not exist " \
+                                            "or is a directory: {}.".format(kaldi_text_path)
+    fh, abs_path = mkstemp()
+    with os.fdopen(fh, 'w') as newf:
+        with open(kaldi_text_path, "r", encoding="utf-8") as fr:
+            line = fr.readline()
+            while line:
+                line = " ".join(line.split()[1:]).strip()  # get rid of the utt_id
+                new_line = convert_sentence(line)
+                newf.write(new_line)
+                line = fr.readline()
+    # Remove old file
+    os.remove(kaldi_text_path)
+    # Move new file
+    move(abs_path, kaldi_text_path)
+
+
 def main():
     msg = """ Use this script if you want to convert the digits of a file to their equivalent greek words.
               You may provide a path to a text file containing only the transcript of an audio file and the 
@@ -371,6 +389,9 @@ def main():
                         help="Path to a file or a directory containing the text files.")
     parser.add_argument("-e", "--extension", required=False, default=".lab",
                         help="Extension of the text files containing the transcripts.")
+    parser.add_argument("--kaldi-text", required=False, default=None,
+                        help="Path to a kaldi text file. This means that the format will "
+                             "comply with: utt_id word1 word2 ... wordN")
     parser.add_argument("-t", "--test-word", required=False, default="NONE",
                         help="A test word in order to test the functionality of the script.")
     args = parser.parse_args()
@@ -378,6 +399,10 @@ def main():
         print(convert_sentence(args.test_word))
         print("Converted test word, now exiting...")
         sys.exit(1)
+    if args.kaldi_text is not None:
+        convert_kaldi_text(args.kaldi_text)
+        print("Successfully converted kaldi text entries!")
+        sys.exit(0)
     filepath = args.path
     if filepath == "./files/":
         print("Using the default filepath:", filepath, ". If you want to use another "

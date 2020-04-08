@@ -300,7 +300,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
             word = str(initial_word.split()[0]).strip()
             word = preprocess_and_convert_nums(word)
             if english_mappings != {}:
-                for letter in word:
+                for letter in set(word):
                     if letter in english_mappings.keys():
                         word = re.sub(letter, english_mappings[letter], word)
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
