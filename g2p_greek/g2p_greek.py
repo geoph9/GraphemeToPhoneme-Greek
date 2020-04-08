@@ -195,7 +195,7 @@ def preprocess_and_convert_nums(word):
         else:
             for char in sub_word:
                 if char.isdigit():
-                    print("Found a digit inside a text: {}. We will ignore it and continue.".format(char))
+                    print("Found a digit inside a text: {}. We will ignore it and continue.".format(sub_word))
                     continue
                 new_word += char
             new_word += " "
