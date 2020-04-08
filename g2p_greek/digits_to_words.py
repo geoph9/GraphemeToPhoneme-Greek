@@ -417,31 +417,32 @@ def main():
             print("".join(out))
         else:
             print("Successfully converted kaldi text entries!")
-        sys.exit(0)
-    filepath = args.path
-    if filepath == "./files/":
-        print("Using the default filepath:", filepath, ". If you want to use another "
-                                                       "path do so by using the "
-                                                       "--path argument.")
-    # ------------------------ CASE 1: INPUT IS FILE ---------------------------
-    if os.path.isfile(filepath):
-        # Create temporary file which will replace the old one.
-        _replace_file_contents(filepath)
-        print("Success!")
-        print("Done processing file from the file:", filepath)
-        sys.exit(1)
-    # ------------------------ CASE 2: INPUT IS DIR ---------------------------
-    if os.path.isdir(filepath):
-        text_file_dir = glob.glob(os.path.join(filepath, "*" + args.extension))
-        if len(text_file_dir) == 0:
-            raise ValueError("The directory that you provided is empty")
-        for text_file in text_file_dir:
-            _replace_file_contents(text_file)
-        print("Success!")
-        print("Done processing files from the directory:", filepath)
-        sys.exit(1)
-    print("Error")
-    print("Something happened and there were no changes made...")
+        # sys.exit(0)
+    else:
+        filepath = args.path
+        if filepath == "./files/":
+            print("Using the default filepath:", filepath, ". If you want to use another "
+                                                           "path do so by using the "
+                                                           "--path argument.")
+        # ------------------------ CASE 1: INPUT IS FILE ---------------------------
+        if os.path.isfile(filepath):
+            # Create temporary file which will replace the old one.
+            _replace_file_contents(filepath)
+            print("Success!")
+            print("Done processing file from the file:", filepath)
+            sys.exit(1)
+        # ------------------------ CASE 2: INPUT IS DIR ---------------------------
+        if os.path.isdir(filepath):
+            text_file_dir = glob.glob(os.path.join(filepath, "*" + args.extension))
+            if len(text_file_dir) == 0:
+                raise ValueError("The directory that you provided is empty")
+            for text_file in text_file_dir:
+                _replace_file_contents(text_file)
+            print("Success!")
+            print("Done processing files from the directory:", filepath)
+            sys.exit(1)
+        print("Error")
+        print("Something happened and there were no changes made...")
 
 
 if __name__ == '__main__':
