@@ -50,7 +50,7 @@ __basic_substitutes = {
 }
 
 
-punctuation = [";", "!", ":"]
+punctuation = [";", "!", ":", "∙", "»"]
 
 
 def _read_in_chunks(file_object, chunk_size=2048):
