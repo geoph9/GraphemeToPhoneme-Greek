@@ -350,29 +350,24 @@ def _replace_file_contents(filepath: str):
     move(abs_path, filepath)
 
 
-def convert_kaldi_text(kaldi_text_path, is_shell_command = False):
+def convert_kaldi_text(kaldi_text_path, out_path=None, is_shell_command=False):
     assert os.path.isfile(kaldi_text_path), "Path to the kaldi text file does not exist " \
                                             "or is a directory: {}.".format(kaldi_text_path)
     new_lines = []
-    fh, abs_path = mkstemp()
-    with os.fdopen(fh, 'w') as newf:
-        with open(kaldi_text_path, "r", encoding="utf-8") as fr:
+    with open(kaldi_text_path, "r", encoding="utf-8") as fr:
+        line = fr.readline()
+        while line:
+            utt_id = line.split()[0]
+            line = " ".join(line.split()[1:]).strip().replace("\n", "")  # get rid of the utt_id
+            new_line = convert_sentence(line)
+            new_line = utt_id + " " + new_line + "\n"
+            new_lines.append(new_line)
             line = fr.readline()
-            while line:
-                utt_id = line.split()[0]
-                line = " ".join(line.split()[1:]).strip().replace("\n", "")  # get rid of the utt_id
-                new_line = convert_sentence(line)
-                new_line = utt_id + " " + new_line + "\n"
-                if is_shell_command is True:
-                    new_lines.append(new_line)
-                else:
-                    newf.write(new_line)
-                line = fr.readline()
     if is_shell_command is False:
-        # Remove old file
-        os.remove(kaldi_text_path)
-        # Move new file
-        move(abs_path, kaldi_text_path)
+        if out_path is None:
+            out_path = kaldi_text_path
+        with open(out_path, "w", encoding="utf-8") as fw:
+            fw.writelines(new_lines)
     return new_lines
 
 
@@ -400,6 +395,9 @@ def main():
     parser.add_argument("--kaldi-text", required=False, default=None,
                         help="Path to a kaldi text file. This means that the format will "
                              "comply with: utt_id word1 word2 ... wordN")
+    parser.add_argument("--out-path", required=False, default="./tempout",
+                        help="If --kaldi-text is provided then the --out-path will define "
+                             "where the new kaldi text file will be placed.")
     parser.add_argument("--shell-command", action="store_true", dest="is_shell_command",
                         help="If provided then we will redirect the output to stdout and "
                              "then you can handle that from your bash script.")
@@ -412,7 +410,7 @@ def main():
         print("Converted test word, now exiting...")
         sys.exit(1)
     if args.kaldi_text is not None:
-        out = convert_kaldi_text(args.kaldi_text, args.is_shell_command)
+        out = convert_kaldi_text(args.kaldi_text, out_path=args.out_path, is_shell_command=args.is_shell_command)
         if args.is_shell_command is True:
             print("".join(out))
         else:
