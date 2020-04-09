@@ -180,25 +180,32 @@ def preprocess_and_convert_nums(word):
     # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
     new_word = ""
     for sub_word in word.split():
-        if sub_word[0].isdigit() and \
-                (sub_word.endswith("ο") or
-                 sub_word.endswith("η") or
-                 sub_word.endswith("α")):
-            digit = ""
-            for l in word:
-                if l.isdigit():
-                    digit += l
-            new_word += convert_numbers(digit) + "τ" + sub_word[-1] + " "  # convert 10ο του δέκατο
-            pass
-        elif sub_word.isdigit():
-            new_word += convert_numbers(sub_word) + " "
+        # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
+        match = re.match(r"([a-zα-ω]+)([0-9]+)", sub_word, re.I)
+        if match:
+            items = match.groups()
         else:
-            for char in sub_word:
-                if char.isdigit():
-                    print("Found a digit inside a text: {}. We will ignore it and continue.".format(sub_word))
-                    continue
-                new_word += char
-            new_word += " "
+            items = [sub_word]
+        for item in items:
+            if item[0].isdigit() and \
+                    (item.endswith("ο") or
+                     item.endswith("η") or
+                     item.endswith("α")):
+                digit = ""
+                for l in word:
+                    if l.isdigit():
+                        digit += l
+                new_word += convert_numbers(digit) + "τ" + item[-1] + " "  # convert 10ο του δέκατο
+                pass
+            elif item.isdigit():
+                new_word += convert_numbers(item) + " "
+            else:
+                for char in item:
+                    if char.isdigit():
+                        print("Found a digit inside a text: {}. We will ignore it and continue.".format(item))
+                        continue
+                    new_word += char
+                new_word += " "
     new_word = re.sub(r"\s+", " ", new_word)
     return new_word
 
