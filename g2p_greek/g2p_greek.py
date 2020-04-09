@@ -181,7 +181,7 @@ def preprocess_and_convert_nums(word):
     new_word = ""
     for sub_word in word.split():
         # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
-        match = re.match(r"([a-zα-ω]+)([0-9]+)", sub_word, re.I)
+        match = re.match(r"([a-zα-ωά-ώ]+)([0-9]+)", sub_word, re.I)
         if match:
             items = match.groups()
         else:
