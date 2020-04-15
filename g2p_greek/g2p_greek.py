@@ -59,7 +59,7 @@ import sys
 import re
 from g2p_greek.rules import *
 from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas
-from g2p_greek.digits_to_words import convert_numbers, convert_sentence
+from g2p_greek.digits_to_words import convert_numbers
 
 try:
     from g2p_greek.english_rules import english_mappings
@@ -180,35 +180,34 @@ def preprocess_and_convert_nums(word):
     # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
     new_word = ""
     for sub_word in word.split():
-        # if sub_word.strip() == "":
-        #     continue
-        # # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
-        # match = re.match(r"([a-zα-ωά-ώϊΐϋΰ]+)([0-9]+)", sub_word, re.I)
-        # if match:
-        #     items = match.groups()
-        # else:
-        #     items = [sub_word]
-        # for item in items:
-        #     if item[0].isdigit() and \
-        #             (item.endswith("ο") or
-        #              item.endswith("η") or
-        #              item.endswith("α")):
-        #         digit = ""
-        #         for l in word:
-        #             if l.isdigit():
-        #                 digit += l
-        #         new_word += convert_numbers(digit) + "τ" + item[-1] + " "  # convert 10ο to δέκατο
-        #         pass
-        #     elif item.isdigit():
-        #         new_word += convert_numbers(item) + " "
-        #     else:
-        #         for char in item:
-        #             if char.isdigit():
-        #                 print("Found a digit inside a text: {}. We will ignore it and continue.".format(item))
-        #                 continue
-        #             new_word += char
-        #         new_word += " "
-        new_word += convert_sentence(sub_word)
+        if sub_word.strip() == "":
+            continue
+        # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
+        match = re.match(r"([a-zα-ωά-ώϊΐϋΰ]+)([0-9]+)", sub_word, re.I)
+        if match:
+            items = match.groups()
+        else:
+            items = [sub_word]
+        for item in items:
+            if item[0].isdigit() and \
+                    (item.endswith("ο") or
+                     item.endswith("η") or
+                     item.endswith("α")):
+                digit = ""
+                for l in word:
+                    if l.isdigit():
+                        digit += l
+                new_word += convert_numbers(digit) + "τ" + item[-1] + " "  # convert 10ο to δέκατο
+                pass
+            elif item.isdigit():
+                new_word += convert_numbers(item) + " "
+            else:
+                for char in item:
+                    if char.isdigit():
+                        print("Found a digit inside a text: {}. We will ignore it and continue.".format(item))
+                        continue
+                    new_word += char
+                new_word += " "
     new_word = re.sub(r"\s+", " ", new_word)
     return new_word
 
