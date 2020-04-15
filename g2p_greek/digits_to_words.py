@@ -285,7 +285,7 @@ def convert_numbers(initial_word: str, to_lower: bool = True) -> str:
     word = process_word(initial_word, to_lower=to_lower)
     # print(word)
     if not word.isdigit():
-        return initial_word
+        return word
     else:
         if len(word) == 1:
             return _convert_1digit(word)
