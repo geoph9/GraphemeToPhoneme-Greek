@@ -375,11 +375,10 @@ def convert_kaldi_text(kaldi_text_path, out_path=None, is_shell_command=False, t
             new_line = utt_id + " " + new_line + "\n"
             new_lines.append(new_line)
             line = fr.readline()
-    if is_shell_command is False:
-        if out_path is None:
-            out_path = kaldi_text_path
-        with open(out_path, "w", encoding="utf-8") as fw:
-            fw.writelines(new_lines)
+    if out_path is None:
+        out_path = kaldi_text_path
+    with open(out_path, "w", encoding="utf-8") as fw:
+        fw.writelines(new_lines)
     return new_lines
 
 
