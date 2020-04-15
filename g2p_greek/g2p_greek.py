@@ -174,12 +174,14 @@ def _sanity_check(phonemes: list):
 
 
 def preprocess_and_convert_nums(word):
-    word = handle_commas(word)
+    word = handle_commas(word.lower())
     # ----- BASIC PROCESSING -----
     word = process_word(word)
     # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
     new_word = ""
     for sub_word in word.split():
+        if sub_word.strip() == "":
+            continue
         # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
         match = re.match(r"([a-zα-ωά-ώ]+)([0-9]+)", sub_word, re.I)
         if match:
@@ -195,7 +197,7 @@ def preprocess_and_convert_nums(word):
                 for l in word:
                     if l.isdigit():
                         digit += l
-                new_word += convert_numbers(digit) + "τ" + item[-1] + " "  # convert 10ο του δέκατο
+                new_word += convert_numbers(digit) + "τ" + item[-1] + " "  # convert 10ο to δέκατο
                 pass
             elif item.isdigit():
                 new_word += convert_numbers(item) + " "
@@ -312,6 +314,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                         word = re.sub(letter, english_mappings[letter], word)
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
             for sub_word in word.split():
+                sub_word = sub_word.lower()
                 key = sub_word[:N]
                 # print(sub_word)
                 if key in lexicon_dict.keys():
