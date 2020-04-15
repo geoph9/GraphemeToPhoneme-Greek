@@ -151,7 +151,8 @@ def process_word(word: str, remove_unknown_chars: bool = True, to_lower: bool = 
     if to_lower:
         word = word.lower()
     for key, val in __basic_substitutes.items():
-        if key in word.lower():
+        if (" " + key + " " in word.lower()) or (" " + key + "." in word.lower()) \
+                or ("." + key + " " in word.lower()) or ("." + key + "." in word.lower()):
             word = re.sub(key, " " + val + " ", word.lower())
     if remove_unknown_chars:
         word = re.sub(r"•|∙|»", " ", word)
