@@ -307,10 +307,10 @@ def convert_numbers(initial_word: str) -> str:
             raise ValueError("We only accept integers of maximum 13 digits")
 
 
-def convert_sentence(sentence: str):
+def convert_sentence(sentence: str, to_lower: bool = False):
     sentence = handle_commas(sentence)
     # sentence = re.sub(r"\.", " . ", sentence)
-    sentence = process_word(sentence, remove_unknown_chars=False, to_lower=False)
+    sentence = process_word(sentence, remove_unknown_chars=True, to_lower=to_lower)
     final_sent = []
     for word in sentence.split():
         final_sent.append(convert_numbers(word))
@@ -327,7 +327,7 @@ def convert_sentence(sentence: str):
     return final_sent
 
 
-def _replace_file_contents(filepath: str):
+def _replace_file_contents(filepath: str, to_lower: bool = False):
     """
         Args:
             filepath: The path to the file for which you want to change the numbers to words.
@@ -342,7 +342,7 @@ def _replace_file_contents(filepath: str):
     fh, abs_path = mkstemp()
     with os.fdopen(fh, 'w') as newf:
         with open(filepath, "r", encoding="utf-8") as f:
-            text = convert_sentence(f.read())
+            text = convert_sentence(f.read(), to_lower=to_lower)
             newf.write(text)
     # Remove old file
     os.remove(filepath)
@@ -350,7 +350,7 @@ def _replace_file_contents(filepath: str):
     move(abs_path, filepath)
 
 
-def convert_kaldi_text(kaldi_text_path, out_path=None, is_shell_command=False):
+def convert_kaldi_text(kaldi_text_path, out_path=None, is_shell_command=False, to_lower=False):
     assert os.path.isfile(kaldi_text_path), "Path to the kaldi text file does not exist " \
                                             "or is a directory: {}.".format(kaldi_text_path)
     new_lines = []
@@ -359,7 +359,7 @@ def convert_kaldi_text(kaldi_text_path, out_path=None, is_shell_command=False):
         while line:
             utt_id = line.split()[0]
             line = " ".join(line.split()[1:]).strip().replace("\n", "")  # get rid of the utt_id
-            new_line = convert_sentence(line)
+            new_line = convert_sentence(line, to_lower=to_lower)
             new_line = utt_id + " " + new_line + "\n"
             new_lines.append(new_line)
             line = fr.readline()
@@ -395,6 +395,10 @@ def main():
     parser.add_argument("--kaldi-text", required=False, default=None,
                         help="Path to a kaldi text file. This means that the format will "
                              "comply with: utt_id word1 word2 ... wordN")
+    parser.add_argument("--to-lower", "-l", required=False, default=True,
+                        choices=['true', 'True', True, 'false', 'False', False],
+                        help="If True then the output file will only contain lowercase "
+                             "characters. Otherwise, the case will be left as is.")
     parser.add_argument("--out-path", required=False, default="./tempout",
                         help="If --kaldi-text is provided then the --out-path will define "
                              "where the new kaldi text file will be placed.")
@@ -405,12 +409,17 @@ def main():
     parser.add_argument("-t", "--test-word", required=False, default="NONE",
                         help="A test word in order to test the functionality of the script.")
     args = parser.parse_args()
+    if args.to_lower in ['true', 'True', True]:
+        to_lower = True
+    else:
+        to_lower = False
     if args.test_word != "NONE":
-        print(convert_sentence(args.test_word))
+        print(convert_sentence(args.test_word), to_lower=to_lower)
         print("Converted test word, now exiting...")
         sys.exit(1)
     if args.kaldi_text is not None:
-        out = convert_kaldi_text(args.kaldi_text, out_path=args.out_path, is_shell_command=args.is_shell_command)
+        out = convert_kaldi_text(args.kaldi_text, out_path=args.out_path,
+                                 is_shell_command=args.is_shell_command, to_lower=to_lower)
         if args.is_shell_command is True:
             print("".join(out))
         else:
@@ -425,7 +434,7 @@ def main():
         # ------------------------ CASE 1: INPUT IS FILE ---------------------------
         if os.path.isfile(filepath):
             # Create temporary file which will replace the old one.
-            _replace_file_contents(filepath)
+            _replace_file_contents(filepath, to_lower=to_lower)
             print("Success!")
             print("Done processing file from the file:", filepath)
             sys.exit(1)
@@ -435,7 +444,7 @@ def main():
             if len(text_file_dir) == 0:
                 raise ValueError("The directory that you provided is empty")
             for text_file in text_file_dir:
-                _replace_file_contents(text_file)
+                _replace_file_contents(text_file, to_lower=to_lower)
             print("Success!")
             print("Done processing files from the directory:", filepath)
             sys.exit(1)
