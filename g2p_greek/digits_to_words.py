@@ -281,8 +281,8 @@ def _convert_more_than10_less_than13_digits(number: str) -> str:
     return out.strip()
 
 
-def convert_numbers(initial_word: str) -> str:
-    word = process_word(initial_word)
+def convert_numbers(initial_word: str, to_lower: bool = True) -> str:
+    word = process_word(initial_word, to_lower=to_lower)
     # print(word)
     if not word.isdigit():
         return initial_word
@@ -310,7 +310,7 @@ def convert_numbers(initial_word: str) -> str:
 def convert_sentence(sentence: str, to_lower: bool = False):
     sentence = handle_commas(sentence)
     # sentence = re.sub(r"\.", " . ", sentence)
-    sentence = process_word(sentence, remove_unknown_chars=True, to_lower=to_lower)
+    # sentence = process_word(sentence, remove_unknown_chars=True, to_lower=to_lower)
     final_sent = []
     for word in sentence.split():
         word = word.lower()
@@ -321,7 +321,7 @@ def convert_sentence(sentence: str, to_lower: bool = False):
         else:
             items = [word]
         for item in items:
-            final_sent.append(convert_numbers(item))
+            final_sent.append(convert_numbers(item, to_lower=to_lower))
     # Concatenate punctuation (e.g. from "they had 9 . the others had 10 ." to "they had nine. the others had 10.")
     final_sent = " ".join(final_sent)
     final_sent = re.sub(r"\s\.", ".", final_sent)

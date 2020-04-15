@@ -197,10 +197,10 @@ def preprocess_and_convert_nums(word):
                 for l in word:
                     if l.isdigit():
                         digit += l
-                new_word += convert_numbers(digit) + "τ" + item[-1] + " "  # convert 10ο to δέκατο
+                new_word += convert_numbers(digit, to_lower=True) + "τ" + item[-1] + " "  # convert 10ο to δέκατο
                 pass
             elif item.isdigit():
-                new_word += convert_numbers(item) + " "
+                new_word += convert_numbers(item, to_lower=True) + " "
             else:
                 for char in item:
                     if char.isdigit():
@@ -225,7 +225,7 @@ def convert_word(word: str) -> Tuple[str, list]:
     """
     # print("Initial word:", word)
     if word.strip().isdigit():
-        word = convert_numbers(word)
+        word = convert_numbers(word, to_lower=True)
     word, current_phonemes = _check_single_chars(word)
     # Since ψ and ξ match to two phonemes we will replace them explicitely
     new_word = re.sub("ψ", "πσ", word)
