@@ -46,9 +46,10 @@ __basic_substitutes = {
     "μια": "μία",
     "λοιπον": "λοιπόν",
     "ΚΤΕΟ": "κτέο",
-    "κτεο": "κτέο",
     "ΕΟΠΥΥ": "εοπύ",
     "online": "ονλάιν",
+    "site": "σάιτ",
+    "service": "σέρβις",
     "okay": "οκέι",
     "ok": "οκέι",
     "large": "λάρτζ",
@@ -63,7 +64,9 @@ __basic_substitutes = {
     "thank": "θενκ",
     "thanks": "θενκς",
     "you": "γιου",
+    "yes": "γιές",
     "viber": "βάιμπερ",
+    "Yamaha": "γιαμάχα",
     "www": "ντάμπλ γιού ντάμπλ γιου ντάμπλ γιού",
     "com": "κόμ"
 }
@@ -151,6 +154,7 @@ def process_word(word: str, remove_unknown_chars: bool = True, to_lower: bool = 
     if to_lower:
         word = word.lower()
     for key, val in __basic_substitutes.items():
+        key = key.lower()
         if (" " + key + " " in word.lower()) or (" " + key + "." in word.lower()) \
                 or ("." + key + " " in word.lower()) or ("." + key + "." in word.lower()):
             word = re.sub(key, " " + val + " ", word.lower())
