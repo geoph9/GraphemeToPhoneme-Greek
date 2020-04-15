@@ -313,7 +313,15 @@ def convert_sentence(sentence: str, to_lower: bool = False):
     sentence = process_word(sentence, remove_unknown_chars=True, to_lower=to_lower)
     final_sent = []
     for word in sentence.split():
-        final_sent.append(convert_numbers(word))
+        word = word.lower()
+        # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
+        match = re.match(r"([a-zα-ωά-ώϊΐϋΰ]+)([0-9]+)", word, re.I)
+        if match:
+            items = match.groups()
+        else:
+            items = [word]
+        for item in items:
+            final_sent.append(convert_numbers(item))
     # Concatenate punctuation (e.g. from "they had 9 . the others had 10 ." to "they had nine. the others had 10.")
     final_sent = " ".join(final_sent)
     final_sent = re.sub(r"\s\.", ".", final_sent)
