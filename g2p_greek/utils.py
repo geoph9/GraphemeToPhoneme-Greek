@@ -50,6 +50,7 @@ __basic_substitutes = {
     "online": "ονλάιν",
     "web": "γουέμπ",
     "site": "σάιτ",
+    "website": "γουέμπσαιτ",
     "service": "σέρβις",
     "okay": "οκέι",
     "ok": "οκέι",

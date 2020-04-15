@@ -312,6 +312,10 @@ def convert_sentence(sentence: str, to_lower: bool = False):
     # sentence = re.sub(r"\.", " . ", sentence)
     # sentence = process_word(sentence, remove_unknown_chars=True, to_lower=to_lower)
     final_sent = []
+    if to_lower:
+        sentence = sentence.lower()
+    sentence = re.sub(r"[^\w0-9]+", " ", sentence)
+    sentence = re.sub(r"\s+", " ", sentence).strip()
     for word in sentence.split():
         word = word.lower()
         # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
