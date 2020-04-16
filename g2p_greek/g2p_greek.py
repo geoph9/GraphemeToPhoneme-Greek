@@ -332,7 +332,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
             # Step 3: Get rid of latin characters (if any). TODO: add more complex rules for english.
             edited_word_complex = ""
             if english_mappings != {}:
-                for letter in set(word_complex):
+                for letter in set(initial_word_complex):
                     if letter in english_mappings.keys():
                         edited_word_complex = re.sub(letter, english_mappings[letter], initial_word_complex)
             if edited_word_complex == "":
@@ -345,8 +345,8 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                         # E.g. convert "α" to "άλφα"
                         edited_sub_word = single_letter_pronounciations[edited_sub_word]
                     else:
-                        warning.warn("An unseen character has been observed while "
-                                     "creating the lexicon: {}.".format(edited_sub_word))
+                        warnings.warn("An unseen character has been observed while "
+                                      "creating the lexicon: {}.".format(edited_sub_word))
                 key = edited_sub_word[:N]
                 # print(sub_word)
                 if key in lexicon_dict.keys():
