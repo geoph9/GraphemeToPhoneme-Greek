@@ -55,6 +55,7 @@ import argparse
 import os
 import fileinput
 import sys
+import warnings
 
 import re
 from g2p_greek.rules import *
@@ -327,26 +328,36 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
             # Step 1: Make sure there are not spaces
             word_complex = str(initial_word.split()[0]).strip()
             # Step 2: Pre-processing and digit handling
-            word_complex = preprocess_and_convert_nums(word_complex)
+            initial_word_complex = preprocess_and_convert_nums(word_complex)
             # Step 3: Get rid of latin characters (if any). TODO: add more complex rules for english.
+            edited_word_complex = ""
             if english_mappings != {}:
                 for letter in set(word_complex):
                     if letter in english_mappings.keys():
-                        word_complex = re.sub(letter, english_mappings[letter], word_complex)
+                        edited_word_complex = re.sub(letter, english_mappings[letter], initial_word_complex)
+            if edited_word_complex == "":
+                edited_word_complex = initial_word_complex
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
-            for sub_word in word_complex.split():
-                sub_word = sub_word.lower()
-                key = sub_word[:N]
+            for initial_sub_word, edited_sub_word in zip(initial_word_complex.split(), edited_word_complex.split()):
+                edited_sub_word = edited_sub_word.lower().strip()
+                if len(edited_sub_word) == 1:  # single character
+                    if edited_sub_word in single_letter_pronounciations.keys():
+                        # E.g. convert "α" to "άλφα"
+                        edited_sub_word = single_letter_pronounciations[edited_sub_word]
+                    else:
+                        warning.warn("An unseen character has been observed while "
+                                     "creating the lexicon: {}.".format(edited_sub_word))
+                key = edited_sub_word[:N]
                 # print(sub_word)
                 if key in lexicon_dict.keys():
-                    if sub_word in lexicon_dict[key].keys():
-                        out_lines.append(sub_word + " " + lexicon_dict[key][sub_word] + "\n")
+                    if edited_sub_word in lexicon_dict[key].keys():
+                        out_lines.append(initial_sub_word + " " + lexicon_dict[key][edited_sub_word] + "\n")
                     else:
-                        sub_word, current_phones = convert_word(sub_word)  # Get word and phonemes
-                        out_lines.append(sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+                        edited_sub_word, current_phones = convert_word(edited_sub_word)  # Get word and phonemes
+                        out_lines.append(initial_sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
                 else:
-                    sub_word, current_phones = convert_word(sub_word)  # Get word and phonemes
-                    out_lines.append(sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+                    edited_sub_word, current_phones = convert_word(edited_sub_word)  # Get word and phonemes
+                    out_lines.append(initial_sub_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
 
     if not is_shell_command:
         # Write the new lines
