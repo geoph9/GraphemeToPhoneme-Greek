@@ -330,13 +330,11 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
             # Step 2: Pre-processing and digit handling
             initial_word_complex = preprocess_and_convert_nums(word_complex)
             # Step 3: Get rid of latin characters (if any). TODO: add more complex rules for english.
-            edited_word_complex = ""
+            edited_word_complex = initial_word_complex
             if english_mappings != {}:
                 for letter in set(initial_word_complex):
                     if letter in english_mappings.keys():
-                        edited_word_complex = re.sub(letter, english_mappings[letter], initial_word_complex)
-            if edited_word_complex == "":
-                edited_word_complex = initial_word_complex
+                        edited_word_complex = re.sub(letter, english_mappings[letter], edited_word_complex)
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
             for initial_sub_word, edited_sub_word in zip(initial_word_complex.split(), edited_word_complex.split()):
                 edited_sub_word = edited_sub_word.lower().strip()
