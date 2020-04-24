@@ -41,6 +41,7 @@ __basic_substitutes = {
     "γεια": "γειά",
     "για": "γιά",
     "δυο": "δύο",
+    "τρια": "τρία",
     "οκ": "οκέι",
     "απο": "από",
     "μια": "μία",
@@ -48,7 +49,9 @@ __basic_substitutes = {
     "ΚΤΕΟ": "κτέο",
     "ΕΟΠΥΥ": "εοπύ",
     "online": "ονλάιν",
+    "web": "γουέμπ",
     "site": "σάιτ",
+    "website": "γουέμπσαιτ",
     "service": "σέρβις",
     "okay": "οκέι",
     "ok": "οκέι",
@@ -72,7 +75,7 @@ __basic_substitutes = {
 }
 
 
-punctuation = [";", "!", ":", "∙", "»"]
+punctuation = [";", "!", ":", "∙", "»", ","]
 
 
 def _read_in_chunks(file_object, chunk_size=2048):
@@ -151,18 +154,19 @@ def handle_commas(word: str, comma_symbol=",") -> str:
 
 
 def process_word(word: str, remove_unknown_chars: bool = True, to_lower: bool = True) -> str:
+    word = word.strip()
     if to_lower:
         word = word.lower()
     for key, val in __basic_substitutes.items():
         key = key.lower()
-        if (key in word.lower().split()) or (key + "." in word.lower().split()):
+        if (key in word.lower().split()) or (key in word.lower().split(".")):
             word = re.sub(key, " " + val + " ", word.lower())
+    word = re.sub(r"\.", " . ", word)
+    word = re.sub(r"\?", " ? ", word)
     if remove_unknown_chars:
         word = re.sub(r"•|∙|»", " ", word)
         word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
     else:
-        word = re.sub(r"\.", " . ", word)
-        word = re.sub(r"\?", " ? ", word)
         word = re.sub(r"\n", " \n ", word)
         word = re.sub(r"\t", " \t ", word)
         for char in punctuation:

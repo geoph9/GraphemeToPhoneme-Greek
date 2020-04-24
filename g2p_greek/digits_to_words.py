@@ -34,7 +34,6 @@ from g2p_greek.utils import process_word, handle_commas, punctuation
 
 from g2p_greek.prefixes import _prefixes
 
-
 to_plural = lambda word: re.sub("ερα", "ερις", re.sub("τρία", "τρείς", word))  # for 13 and 14 special cases in plural
 
 
@@ -75,7 +74,7 @@ def _convert_2digit(number: str) -> str:
     temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            temp_num = number[index+1:]
+            temp_num = number[index + 1:]
         else:
             break
     number = temp_num
@@ -100,7 +99,7 @@ def _convert_3digit(number: str) -> str:
     temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            temp_num = number[index+1:]
+            temp_num = number[index + 1:]
         else:
             break
     number = temp_num
@@ -130,7 +129,7 @@ def _convert_4digit(number: str) -> str:
     temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            temp_num = number[index+1:]
+            temp_num = number[index + 1:]
         else:
             number = temp_num
             break
@@ -160,7 +159,7 @@ def _convert_5digit(number: str) -> str:
     temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            temp_num = number[index+1:]
+            temp_num = number[index + 1:]
         else:
             number = temp_num
             break
@@ -190,7 +189,7 @@ def _convert_6digit(number: str) -> str:
     temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            temp_num = number[index+1:]
+            temp_num = number[index + 1:]
         else:
             break
     number = temp_num
@@ -234,7 +233,7 @@ def _convert_more_than7_less_than10_digits(number: str) -> str:
     temp_num = number
     for index, sub_digit in enumerate(number):
         if sub_digit == "0":
-            temp_num = number[index+1:]  # e.g. if number=0010000 then it will be converted to 10000
+            temp_num = number[index + 1:]  # e.g. if number=0010000 then it will be converted to 10000
         else:
             break
     number = temp_num
@@ -281,11 +280,22 @@ def _convert_more_than10_less_than13_digits(number: str) -> str:
     return out.strip()
 
 
-def convert_numbers(initial_word: str) -> str:
-    word = process_word(initial_word)
-    # print(word)
+def convert_numbers(word: str) -> str:
+    """ Given a string as input, the function will return its transliteration if
+        the string can be transformed to a digit. Otherwise, it will return the
+        same word.
+        Args:
+            word: A string containing an integer (not decimals allowed).
+        Returns:
+            The transliteration of the integer if an integer is provided.
+            Otherwise, it will return the same word.
+            If the word has spaces on its sides then they will be stripped.
+        Raises:
+            ValueError: If the input word is an integer of more than 13 digits.
+    """
+    word = word.strip()
     if not word.isdigit():
-        return initial_word
+        return word
     else:
         if len(word) == 1:
             return _convert_1digit(word)
@@ -310,20 +320,33 @@ def convert_numbers(initial_word: str) -> str:
 def convert_sentence(sentence: str, to_lower: bool = False):
     sentence = handle_commas(sentence)
     # sentence = re.sub(r"\.", " . ", sentence)
-    sentence = process_word(sentence, remove_unknown_chars=True, to_lower=to_lower)
     final_sent = []
+    if to_lower:
+        sentence = sentence.lower()
+    sentence = re.sub(r"[^\w0-9]+", " ", sentence)
+    sentence = re.sub(r"\s+", " ", sentence).strip()
     for word in sentence.split():
         word = word.lower()
-        # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
-        match = re.match(r"([a-zα-ωά-ώϊΐϋΰ]+)([0-9]+)", word, re.I)
-        if match:
-            items = match.groups()
-        else:
-            items = [word]
-        for item in items:
-            final_sent.append(convert_numbers(item))
+        # Step 1: Process words (use basic substitutes and get rid of punctuation etc).
+        word = process_word(word, to_lower=to_lower, remove_unknown_chars=True)
+        for sub_word in word.split():
+            if sub_word == "":
+                continue
+            # Step 2: Split words into words and digits (numbers). E.g. είναι2 -> είναι 2.
+            match = re.match(r"([a-zα-ωά-ώϊΐϋΰ]+)([0-9]+)", sub_word, re.I)
+            if match:
+                words = match.groups()
+            else:
+                words = [word]
+            for w in words:
+                if w.strip() == "":
+                    continue
+                # Step 3: Convert numbers to words (if they exist).
+                final_sent.append(convert_numbers(w))
     # Concatenate punctuation (e.g. from "they had 9 . the others had 10 ." to "they had nine. the others had 10.")
+    #  -> Note that the space before the dots appears deliberately (check process_word in utils.py).
     final_sent = " ".join(final_sent)
+    final_sent = re.sub(r"\s+", " ", final_sent)
     final_sent = re.sub(r"\s\.", ".", final_sent)
     final_sent = re.sub(r"\s\?", "?", final_sent)
     final_sent = re.sub(r"\s\n", "\n", final_sent)
@@ -371,11 +394,10 @@ def convert_kaldi_text(kaldi_text_path, out_path=None, is_shell_command=False, t
             new_line = utt_id + " " + new_line + "\n"
             new_lines.append(new_line)
             line = fr.readline()
-    if is_shell_command is False:
-        if out_path is None:
-            out_path = kaldi_text_path
-        with open(out_path, "w", encoding="utf-8") as fw:
-            fw.writelines(new_lines)
+    if out_path is None:
+        out_path = kaldi_text_path
+    with open(out_path, "w", encoding="utf-8") as fw:
+        fw.writelines(new_lines)
     return new_lines
 
 
@@ -422,7 +444,7 @@ def main():
     else:
         to_lower = False
     if args.test_word != "NONE":
-        print(convert_sentence(args.test_word), to_lower=to_lower)
+        print(convert_sentence(args.test_word))
         print("Converted test word, now exiting...")
         sys.exit(1)
     if args.kaldi_text is not None:
