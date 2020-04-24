@@ -59,7 +59,7 @@ import warnings
 
 import re
 from g2p_greek.rules import *
-from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas
+from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas, handle_hours
 from g2p_greek.digits_to_words import convert_numbers
 
 try:
@@ -190,6 +190,7 @@ def preprocess_and_convert_nums(word):
     """
     word = re.sub(r"\s\t", "\t", word)
     word = handle_commas(word.lower()).strip()
+    word = handle_hours(word)
     # ----- BASIC PROCESSING -----
     word = process_word(word, to_lower=False, remove_unknown_chars=True)
     # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
@@ -215,6 +216,12 @@ def preprocess_and_convert_nums(word):
                         digit += l
                 new_word += convert_numbers(digit) + "τ" + w[-1] + " "  # convert 10ο to δέκατο
                 pass
+            elif w[0].isdigit() and (w.endswith("ος") or w.endswith("ες")):
+                digit = ""
+                for l in word:
+                    if l.isdigit():
+                        digit += l
+                new_word += convert_numbers(digit) + "τ" + w[-2] + w[-1] + " "  # convert 10ος to δεκατος
             elif w.isdigit():
                 # Case 2: If the whole word is a digit then just convert it
                 new_word += convert_numbers(w) + " "
@@ -226,7 +233,7 @@ def preprocess_and_convert_nums(word):
                         continue
                     new_word += char
                 new_word += " "
-    new_word = re.sub(r"\s+", " ", new_word)
+    new_word = re.sub(r"\s+", " ", new_word).strip()
     return new_word
 
 
