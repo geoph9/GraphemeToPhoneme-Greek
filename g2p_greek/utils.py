@@ -22,6 +22,7 @@
 
 import argparse
 import os
+import sys
 import re
 
 
@@ -150,6 +151,26 @@ def handle_commas(word: str, comma_symbol=",") -> str:
                 word = word[comma_index-1]
                 break
         comma_index = word.find(comma_symbol)
+    return word
+
+
+def handle_hours(word: str):
+    # We will assume that the word is an hour if it contains a ":"
+    # For example, convert 10:45 to 10 και 45
+    # If the minutes are 15 or 30 then the hour will look like:
+    #   10:15 -> 10 και τεταρτο
+    #   8:30  -> 8 και μιση (and not οχτωμιση)
+    if ":" not in word:
+        return word
+    parts = word.split(":")
+    if len(parts) != 2 or "" in parts:
+        # Just ignore the ':'
+        return re.sub(":", " ", word).strip()
+    word = re.sub(":", " και ", word)
+    if parts[1] == "15":
+        word = re.sub("15", "τέταρτο", word)
+    elif parts[1] == "30":
+        word = re.sub("30", "μισή", word)
     return word
 
 
