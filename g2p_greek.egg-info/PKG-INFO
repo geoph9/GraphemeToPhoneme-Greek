@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: g2p-greek
-Version: 0.0.1
+Version: 0.0.2
 Summary: Grapheme to Phoneme and Digit to Word conversion for Greek texts.
 Home-page: https://github.com/geoph9/GraphemeToPhoneme-Greek
 Author: George Karakasidis

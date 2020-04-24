@@ -1,9 +1,11 @@
 README.md
 setup.py
 g2p_greek/__init__.py
+g2p_greek/dictionary.py
 g2p_greek/digits_to_words.py
 g2p_greek/english_rules.py
 g2p_greek/g2p_greek.py
+g2p_greek/phoneme_conversion.py
 g2p_greek/prefixes.py
 g2p_greek/rules.py
 g2p_greek/sort.py
