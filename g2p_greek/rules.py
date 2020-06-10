@@ -3,7 +3,7 @@
 
 vowel_phonemes = ["a0", "a1", "e0", "e1", "i0", "i1", "o0", "o1", "u0", "u1"]
 
-character_rules: dict = {
+character_rules = {
     "α": "a0",
     "ά": "a1",
     "β": "v",
@@ -42,9 +42,7 @@ character_rules: dict = {
     "ώ": "o1"
 }
 
-# char_rules_reversed: dict = {val: key for key, val in character_rules.items()}
-
-diphthong_rules: dict = {
+diphthong_rules = {
     "ου": "u0",
     "ού": "u1",
     "οϋ": "o0 i0",
@@ -74,11 +72,13 @@ diphthong_rules: dict = {
     "ιό": "i o1"
 }
 
-triphthong_rules: dict = {
-    "νγκ": "n g"
+triphthong_rules = {
+    "νγκ": "n g",
+    "για": "j a0",
+    "γιά": "j a1"
 }
 
-single_letter_pronounciations: dict = {
+single_letter_pronounciations = {
     "α": "άλφα",
     "ά": "άλφα",
     "β": "βήτα",
