@@ -49,7 +49,90 @@ There are tho main scripts which you should use (though feel free to make any ot
 changes). Below, I will try to give a brief introduction on the main points of these 
 scripts. 
 
-### The `digits_to_words.py` script:
+
+## The `g2p_greek.py` script:
+This script contains functionality to find the phonemes of greek words.
+The algorithms uses only rules and does not need anything to learn. Since 
+there are always irregularities, this algorithm is not 100% correct for 
+every new word. For example, if the same vowel appears more than once in 
+a sentence, then it will flatten it and use it only once (e.g. `ααα` will 
+be converted to `α` and so the phoneme will be `a1`). Of course, it is 
+highly irregular for words like these to appear in Greek texts but it is 
+not impossible. This is also the reason why I recommend you to use the 
+CMU Sphinx lexicon since it already contains words like these. 
+
+If you provide the `--path-to-lexicon` argument followed by the path to the 
+`el-gr.dic` (by default it is in `./data/`) then the script will first look 
+if the word is inside the lexicon and only if it is not, then it will 
+convert it with this algorithm.
+
+Note: This is the main script of the package which means that you can also 
+execute it from any place by calling `python -m g2p_greek <ARGUMENTS>`.
+
+
+#### TL;DR
+- If you want to use the CMU lexicon (significantly slower):
+    `python -m g2p_greek -w /example/path/to/word.txt`  (`-w` is equivalent to `--path-to-words-txt`)
+- If you want to use your own lexicon:
+    `python -m g2p_greek -w /example/path/to/words.txt -l /path/to/my/lexicon.dic`
+- If you want to only use this algorithm (fastest way):
+    `python -m g2p_greek -u /example/path/to/words.txt` (`-u` is equivalent to `--path-to-unknown-words`)
+- Default output is in `tests/output.dic`.
+
+#### Example usage:
+
+1. Let's say you have a `words.txt` file containing different words at 
+each new line. Then you can create a file `new_lexicon.dic` which will 
+contain the words followed by their phonemes.
+
+    ```
+    python -m g2p_greek --path-to-words-txt /home/user/data/words.txt \
+                        --path-to-lexicon ./el-gr.dic \
+                        --out-path /home/user/data/new_lexicon.dic
+   ```
+    
+    The above will read each line of the `words.txt` file and for each word 
+    that it finds, it will find its phonemes (either in the lexicon or by 
+    the algorithm) and will create an entry to the `new_lexicon.dic`. 
+    Example output:
+    
+    ```
+   λέξη l e1 k s i0  # calculated from el-gr.dic
+   εκτός e0 k t o1 s  # calculated from our algorithm
+   ααα a1 a0 a0  # calculated from el-gr.dic
+   ...
+   ```
+   
+   *IMPORTANT: the `new_lexicon.dic` will only contain the phonemes and the 
+   words of the words in the `words.txt` file. It will not keep the other 
+   entries from the original lexicon.*
+   
+2. If you have a `words.txt` file and it only contains words that <ins>do not 
+exist in the lexicon</ins> then you may use the `--path-to-unknown-words` argument.
+This case is useful if you have done some preprocessing to your corpus and 
+you have found the out-of-vocabulary (OOV) words and you want to automatically
+find their phonemes without doing it by hand. (The format of this `words.txt` should 
+be the same as the one in case 1.)
+
+    ```
+   python -m g2p_greek --path-to-unknown-words /home/user/data/unknown_words.txt \
+                       --out-path /home/user/data/unknown_words_lexicon.dic
+   ```
+    NOTE: This will run much faster than the previous one since it does not 
+    load the dictionary file. On the downside, there is risk that the phonemes
+    will not be that accurate. <ins>It is recommended to use the previous mode.</ins>
+
+For more information check the `g2p_greek/g2p_greek.py` script.
+
+---
+
+
+## The `digits_to_words.py` script:
+The script has its own repository [here](https://github.com/geoph9/Numbers2Words-Greek) 
+but I have a similar copy here since I have done some modifications. It is not advised 
+to use this script separately. The scripts inside the Numbers2Words-Greek repository 
+are more stable.
+
 This script contains functionality to convert numbers to their
 corresponding words in Greek. It only handles positive numbers 
 (you can easily change it to handle negative ones) and can also 
@@ -93,73 +176,8 @@ directory and will change the numbers to their corresponding greek words.
 
 ---
 
-### The `g2p_greek.py` script:
-This script contains functionality to find the phonemes of greek words.
-The algorithms uses only rules and does not need anything to learn. Since 
-there are always irregularities, this algorithm is not 100% correct for 
-every new word. For example, if the same vowel appears more than once in 
-a sentence, then it will flatten it and use it only once (e.g. `ααα` will 
-be converted to `α` and so the phoneme will be `a1`). Of course, it is 
-highly irregular for words like these to appear in Greek texts but it is 
-not impossible. This is also the reason why I recommend you to use the 
-CMU Sphinx lexicon since it already contains words like these. 
 
-If you provide the `--path-to-lexicon` argument followed by the path to the 
-`el-gr.dic` (by default it is in `./data/`) then the script will first look 
-if the word is inside the lexicon and only if it is not, then it will 
-convert it with this algorithm.
-
-Example usage:
-
-1. Let's say you have a `words.txt` file containing different words at 
-each new line. Then you can create a file `new_lexicon.dic` which will 
-contain the words followed by their phonemes.
-
-    ```
-    python g2p_greek.py --path-to-words-txt /home/user/data/words.txt \
-                        --path-to-lexicon ./el-gr.dic \
-                        --out-path /home/user/data/new_lexicon.dic
-   ```
-    
-    The above will read each line of the `words.txt` file and for each word 
-    that it finds, it will find its phonemes (either in the lexicon or by 
-    the algorithm) and will create an entry to the `new_lexicon.dic`. 
-    Example output:
-    
-    ```
-   λέξη l e1 k s i0  # calculated from el-gr.dic
-   εκτός e0 k t o1 s  # calculated from our algorithm
-   ααα a1 a0 a0  # calculated from el-gr.dic
-   ...
-   ```
-   
-   *IMPORTANT: the `new_lexicon.dic` will only contain the phonemes and the 
-   words of the words in the `words.txt` file. It will not keep the other 
-   entries from the original lexicon.*
-   
-2. If you have a `words.txt` file and it only contains words that <ins>do not 
-exist in the lexicon</ins> then you may use the `--path-to-unknown-words` argument.
-This case is useful if you have done some preprocessing to your corpus and 
-you have found the out-of-vocabulary (OOV) words and you want to automatically
-find their phonemes without doing it by hand.
-
-    ```
-   python g2p_greek.py --path-to-unknown-words /home/user/data/unknown_words.txt \
-                        --out-path /home/user/data/unknown_words_lexicon.dic
-   ```
-    NOTE: This will run much faster than the previous one since it does not 
-    load the dictionary file. On the downside, there is risk that the phonemes
-    will not be that accurate. <ins>It is recommended to use the previous mode.</ins>
-
-
-A more detailed description of the algorithm can be found 
-in `g2p_own_rules.py`. It is well documented and also offers some 
-utilities for shell-command running (this mostly has to do with how 
-you want to handle the output and the print statements).
-
----
-
-### Special cases:
+## Special cases:
 1. If you have 2 dictionaries, let's say the original `el-gr.dic` and 
 another one that you created from the `g2p_greek.py` script, then you 
 can combine these into one script by using the `sort.py` script. For 
