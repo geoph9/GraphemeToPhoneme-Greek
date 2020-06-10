@@ -1,13 +1,4 @@
-# ignore g2p cmu dictionary (contains the g2p-cmu NN model for g2p conversion)
-./g2p_cmu_dict/
+__pycache__
+g2p_greek/__pycache__
 
-# ignore the sphinx source code
-./sphinx4-5prealpha-src/
-
-
-/g2p_cmu_dict/
-/sphinx4-5prealpha-src/
-
-.idea/
-
-pyproject.toml
+.gitignore
