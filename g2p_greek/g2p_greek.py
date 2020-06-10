@@ -203,25 +203,67 @@ def convert_file(path_to_file: str, out_path: str,
     with open(path_to_file, "r", encoding="utf-8") as fr:
         lines = fr.readlines()
         out_lines: list = []
-        for initial_line in lines:
+        for i, initial_word in enumerate(lines):
+            if initial_word.replace("\n", "").strip() == "":
+                continue
+            initial_word_complex = initial_word.strip()
+            # Step 1: Make sure there are not spaces
+            if " " in initial_word_complex:
+                raise ValueError("Found space inside an entry of words.txt.\nLine: {}\nWord: {}.".format(i, initial_word_complex))
+            # Step 2: Pre-processing and digit handling
+            initial_word_complex = basic_preprocessing(initial_word_complex)
+            # Step 3: Get rid of latin characters (if any). TODO: add more complex rules for english.
+            edited_word_complex = initial_word_complex
+            if english_mappings != {}:
+                for letter in set(initial_word_complex):
+                    if letter in english_mappings.keys():
+                        edited_word_complex = re.sub(letter, english_mappings[letter], edited_word_complex)
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
-            for word in initial_line.split():
-                word_complex = basic_preprocessing(word.strip())  # trim and process string
-                for initial_word in word_complex.split():
-                    initial_word = initial_word.strip()  # e.g. word is "10"
-                    if initial_word.isdigit():
-                        if not use_numbers:  # if we don't want numbers then convert 10 to δεκα
-                            initial_word = _number_to_word(initial_word)
+            for initial_sub_word, edited_sub_word in zip(initial_word_complex.split(), edited_word_complex.split()):
+                edited_sub_word = edited_sub_word.lower().strip()
+                # Convert numbers to words
+                if edited_sub_word.isdigit():
+                    edited_sub_word = _number_to_word(edited_sub_word)
+                    if not use_numbers:  # Then we are going to completely ignore numbers
+                        out = ""
+                        for edited_w in edited_sub_word.split():
+                            _, current_phones = convert_word(edited_w)  # Get word and phonemes
+                            # Use only the transliteration
+                            out += edited_w + " " + " ".join(current_phones) + "\n"  # append new line at the end
+                        out = re.sub(r"\s+", " ", out).strip()
+                    else:
+                        # If the number can be expressed in just one word then keep it.
+                        # E.g. 1936 -> "χιλια εννιακοσια τριανταεξι" : more than 1 word so we won't keep the number
+                        #      But 10 -> "δεκα" : only one word so we will keep the number 10
+                        if len(edited_sub_word.split()) > 1:
+                            out = ""
+                            for edited_w in edited_sub_word.split():
+                                # Use only the transliteration
+                                _, current_phones = convert_word(edited_w)  # Get word and phonemes
+                                out += edited_w + " " + " ".join(current_phones) + "\n"  # append new line at the end
+                            out = re.sub(r"\s+", " ", out).strip()
+                        elif len(edited_sub_word.split()) == 1:
+                            # We expect the phonemes to correspond to only one word.
+                             _, current_phones = convert_word(edited_sub_word)  # Get word and phonemes
+                             out = edited_sub_word + " " + " ".join(current_phones) + "\n"  # append new line at the end
                         else:
-                            # If the number has more than 3 digits (e.g. 111) then convert
-                            # the number to a word since that is more than 2 syllables.
-                            if len(initial_word) > 2 and len(set(initial_word)) > 1:
-                                initial_word = _number_to_word(initial_word)
-                    # Get the phonemes. We are ignoring the first arg which is the word since we already have the word.
-                    _, current_phones = convert_word(initial_word)  # Get the phonemes for 10 (or δεκα)
-                    # If use_numbers is true then write "10 dh e1 k a0"
-                    # else write "δέκα dh e1 k a0"
-                    out_lines.append(initial_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+                            # If we get here then there is probably some bug
+                            warnings.warn("Error occurred while converting a digit: {}.".format(initial_sub_word))
+                            continue
+                else:
+                    if len(edited_sub_word) == 1:  # single character
+                        if edited_sub_word in single_letter_pronounciations.keys():
+                            # E.g. convert "α" to "άλφα"
+                            edited_sub_word = single_letter_pronounciations[edited_sub_word]
+                        else:
+                            warnings.warn("An unseen character has been observed while "
+                                          "creating the lexicon: {}.".format(edited_sub_word))
+                            continue
+                    _, current_phones = convert_word(edited_sub_word)  # Get word and phonemes
+                    out = initial_sub_word + " " + " ".join(current_phones) + "\n"  # append new line at the end
+                out = out.strip()
+                if not out.endswith("\n"): out += "\n"
+                out_lines.append(out)
     out_lines = list(set(out_lines))  # remove duplicates
     with open(out_path, "w", encoding="utf-8") as fw:
         fw.writelines(out_lines)
@@ -281,7 +323,6 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
             for initial_sub_word, edited_sub_word in zip(initial_word_complex.split(), edited_word_complex.split()):
                 edited_sub_word = edited_sub_word.lower().strip()
-                print(initial_sub_word, " BLA ", edited_sub_word, end=" :: ")
                 # Convert numbers to words
                 if edited_sub_word.isdigit():
                     edited_sub_word = _number_to_word(edited_sub_word)
@@ -308,7 +349,6 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                             # If we get here then there is probably some bug
                             warnings.warn("Error occurred while converting a digit: {}.".format(initial_sub_word))
                             continue
-                    print(edited_sub_word)
                 else:
                     if len(edited_sub_word) == 1:  # single character
                         if edited_sub_word in single_letter_pronounciations.keys():
@@ -319,12 +359,11 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                             warnings.warn("An unseen character has been observed while "
                                           "creating the lexicon: {}.".format(edited_sub_word))
                             continue
-                    print(edited_sub_word)
                     out = lexicon.get_word_phonemes(edited_sub_word, initial_word=initial_sub_word)
                 out = out.strip()
                 if not out.endswith("\n"): out += "\n"
                 out_lines.append(out)
-    # out_lines = list(set(out_lines))  # remove duplicates
+    out_lines = list(set(out_lines))  # remove duplicates
     if not is_shell_command:
         # Write the new lines
         with open(os.path.abspath(out_path), "w", encoding="utf-8") as fw:
@@ -381,7 +420,7 @@ def cmdline():
                     "                           --out-path /home/user/new_lexicon.dic",
         add_help=False
     )
-    full_words_parser.add_argument("-w", "--path-to-words-txt", required=False, default=".", action=InvalidPathError,
+    full_words_parser.add_argument("-w", "--path-to-words-txt", required=False, default=None, action=InvalidPathError,
                                    help="Path to the words.txt file (or any other name) that contains all of the words"
                                         "that appear in our data (e.g. in the kaldi text file).")
     full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "el-gr.dic"),
@@ -425,23 +464,22 @@ def cmdline():
     # --------------------------- USE LEXICON (RECOMMENDED) -----------------------------------
     # mode 1: Using the cmu lexicon
     lex_path = full_words_args.path_to_lexicon
-    if full_words_args.path_to_words_txt != "." and os.path.exists(lex_path):
+    if (full_words_args.path_to_words_txt is not None) and (os.path.isfile(lex_path)):
         out = convert_from_lexicon(full_words_args.path_to_words_txt,
                                    lex_path, general_args.out_path,
                                    check_dirs=True, use_numbers=use_numbers)
         if general_args.is_shell_command:
             print("".join(out))
+        else:
+            print("Sucess! File saved in: {}".format(general_args.out_path))
         sys.exit(0)
-    else:
-        print("Could not located the lexicon path:", lex_path, ". We are proceeding to use this algorithm for "
-                                                               "all conversions.")
 
     # ---------------------------------- USE OUR ALGORITHM ---------------------------------
     # mode 2: Do not use the lexicon
     if unknown_words_args.path_to_unknown_words != ".":
-        print("NAHHHH")
         convert_file(path_to_file=unknown_words_args.path_to_unknown_words, out_path=general_args.out_path,
                      check_dirs=True, use_numbers=use_numbers)
+        print("Sucess! File saved in: {}".format(general_args.out_path))
         sys.exit(0)
 
 
