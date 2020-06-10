@@ -71,53 +71,55 @@ except ImportError:
     pass
 
 
-def basic_preprocessing(word: str, to_lower=True):
+def basic_preprocessing(initial_word: str, to_lower=True):
     """ Basic preprocessing. Here we assume that the input (word) is a
         single word and does not contain any spaces in it. This is normal
         since, supposedly, the input is each line in a words.txt file
         (and each line is a single word by default).
         Note that this function does not convert numbers to words. (except from 10ος -> δέκατος etc)
         Args:
-            word: A single word.
+            initial_word: A single word.
         Returns:
             The processed outcome of the word. May be more than one words.
             For example, if the input is "10,9" then is will be converted to
             "10 κόμμα 9" (decimal handling).
     """
-    word = re.sub(r"\s\t", "\t", word)
-    if to_lower: word = word.lower()
-    word = handle_commas(word).strip()
-    word = handle_hours(word)
-    # ----- BASIC PROCESSING -----
-    word = process_word(word, to_lower=False, keep_only_chars_and_digits=True)
-    # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
+    initial_word = re.sub(r"\s\t", "\t", initial_word)
+    if to_lower: initial_word = initial_word.lower()
+    word_complex = handle_commas(initial_word).strip()
+    word_complex = handle_hours(word_complex)
     new_word = ""
-    for sub_word in word.split():
-        if sub_word.strip() == "":
-            continue
-        # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
-        words = re.split(r"(\d+)", sub_word)  # may have spaces
-        words = [w for w in words if w.strip() != ""]  # remove spaces from list
-        for w in words:
-            if w[0].isdigit() and \
-                    (w.endswith("ο") or
-                     w.endswith("η") or
-                     w.endswith("α")):
-                # Case 1: If we have words like 10ο
-                digit = ""
-                for l in word:
-                    if l.isdigit():
-                        digit += l
-                new_word += convert_numbers(digit) + "τ" + w[-1] + " "  # convert 10ο to δέκατο
-                pass
-            elif w[0].isdigit() and (w.endswith("ος") or w.endswith("ες")):
-                digit = ""
-                for l in word:
-                    if l.isdigit():
-                        digit += l
-                new_word += convert_numbers(digit) + "τ" + w[-2] + w[-1] + " "  # convert 10ος to δέκατος
-            else:
-                new_word += w + " "
+    for word in word_complex.split():
+        # ----- BASIC PROCESSING -----
+        word = process_word(word, to_lower=False, keep_only_chars_and_digits=False)
+        # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
+        for sub_word in word.split():
+            if sub_word.strip() == "":
+                continue
+            # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
+            words = re.split(r"(\d+)", sub_word)  # may have spaces
+            words = [w for w in words if w.strip() != ""]  # remove spaces from list
+            for w in words:
+                if w[0].isdigit() and \
+                        (w.endswith("ο") or
+                         w.endswith("η") or
+                         w.endswith("α")):
+                    # Case 1: If we have words like 10ο
+                    digit = ""
+                    for l in word:
+                        if l.isdigit():
+                            digit += l
+                    new_word += convert_numbers(digit) + "τ" + w[-1] + " "  # convert 10ο to δέκατο
+                    pass
+                elif w[0].isdigit() and (w.endswith("ος") or w.endswith("ες")):
+                    digit = ""
+                    for l in word:
+                        if l.isdigit():
+                            digit += l
+                    new_word += convert_numbers(digit) + "τ" + w[-2] + w[-1] + " "  # convert 10ος to δέκατος
+                else:
+                    new_word += w + " "
+        new_word += " "
     new_word = re.sub(r"\s+", " ", new_word).strip()
     return new_word
 
@@ -279,6 +281,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
             for initial_sub_word, edited_sub_word in zip(initial_word_complex.split(), edited_word_complex.split()):
                 edited_sub_word = edited_sub_word.lower().strip()
+                print(initial_sub_word, " BLA ", edited_sub_word, end=" :: ")
                 # Convert numbers to words
                 if edited_sub_word.isdigit():
                     edited_sub_word = _number_to_word(edited_sub_word)
@@ -305,6 +308,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                             # If we get here then there is probably some bug
                             warnings.warn("Error occurred while converting a digit: {}.".format(initial_sub_word))
                             continue
+                    print(edited_sub_word)
                 else:
                     if len(edited_sub_word) == 1:  # single character
                         if edited_sub_word in single_letter_pronounciations.keys():
@@ -315,9 +319,12 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                             warnings.warn("An unseen character has been observed while "
                                           "creating the lexicon: {}.".format(edited_sub_word))
                             continue
+                    print(edited_sub_word)
                     out = lexicon.get_word_phonemes(edited_sub_word, initial_word=initial_sub_word)
+                out = out.strip()
+                if not out.endswith("\n"): out += "\n"
                 out_lines.append(out)
-    out_lines = list(set(out_lines))  # remove duplicates
+    # out_lines = list(set(out_lines))  # remove duplicates
     if not is_shell_command:
         # Write the new lines
         with open(os.path.abspath(out_path), "w", encoding="utf-8") as fw:
@@ -405,7 +412,6 @@ def cmdline():
         use_numbers = True
     else:
         use_numbers = False
-
     # ----------------------- CONVERT TEST WORD -----------------------------
     # If there is a test word then calculate its phonemes and exit
     if general_args.test_word != "":

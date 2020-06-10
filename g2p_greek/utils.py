@@ -166,7 +166,8 @@ def process_word(word: str, keep_only_chars_and_digits: bool = True, to_lower: b
     for key, val in __basic_substitutes.items():
         key = key.lower()  # convert to lowercase in order to avoid bugs
         if (key in word.lower().split()) or (key in word.lower().split(".")):
-            word = re.sub(key, " " + val + " ", word.lower())
+            if key == "$": key = "\$"
+            word = re.sub(key, " " + val + " ", word.lower().strip())
     word = re.sub(r"\.", " . ", word)
     word = re.sub(r"\?", " ? ", word)
     word = re.sub(r"•|∙|»", " ", word)
