@@ -27,52 +27,35 @@ import re
 
 
 __basic_substitutes = {
-    "4k": "φορ κέι",
-    "$": "δολλάρια",
-    "€": "ευρώ",
-    "&": "και",
-    "@": "παπάκι",  # ατ
-    "#": "δίεση",  # χασταγκ
-    "%": "τοις εκατό",
-    ",": "κόμμα",
-    "ποιος": "ποιός",
-    "ποια": "ποιά",
-    "ποιο": "ποιό",
-    "πιο": "πιό",
-    "γεια": "γειά",
-    "για": "γιά",
-    "δυο": "δύο",
-    "τρια": "τρία",
-    "οκ": "οκέι",
-    "απο": "από",
-    "μια": "μία",
-    "λοιπον": "λοιπόν",
-    "ΚΤΕΟ": "κτέο",
-    "ΕΟΠΥΥ": "εοπύ",
-    "online": "ονλάιν",
-    "web": "γουέμπ",
-    "site": "σάιτ",
-    "website": "γουέμπσαιτ",
-    "service": "σέρβις",
-    "okay": "οκέι",
-    "ok": "οκέι",
-    "large": "λάρτζ",
-    "medium": "μίντιουμ",
-    "small": "σμόλ",
-    "email": "ιμέιλ",
-    "e-mail": "ιμέιλ",
-    "gr": "τζι αρ",
-    "toyota": "τογιότα",
-    "hyundai": "χιουντάι",
-    "bye": "μπάι",
-    "thank": "θενκ",
-    "thanks": "θενκς",
-    "you": "γιου",
-    "yes": "γιές",
-    "viber": "βάιμπερ",
-    "Yamaha": "γιαμάχα",
-    "www": "ντάμπλ γιού ντάμπλ γιου ντάμπλ γιού",
-    "com": "κόμ"
+    # GENERAL
+    "4k": "φορ κέι", "λοιπον": "λοιπόν",
+    # CURRENCIES
+    "$": "δολλάρια", "€": "ευρώ",
+    # PUNCTUATION
+    "&": "και", "@": "παπάκι", "#": "δίεση", "%": "τοις εκατό", ",": "κόμμα",
+    # PRONOUNS AND OTHERS
+    "απο": "από", "μια": "μία", "ποιος": "ποιός", "ποια": "ποιά", "ποιο": "ποιό", "πιο": "πιό",
+    # WORDS WITH MORE THAN ONE VOWEL THAT HAVE NO INTONATION
+    "γεια": "γειά", "για": "γιά",
+    "δυο": "δύο", "τρια": "τρία",  # NUMBERS
+    "οκ": "οκέι", "okay": "οκέι", "ok": "οκέι",
+    # INITIALS
+    "ΚΤΕΟ": "κτέο", "ΕΟΠΥΥ": "εοπύ", "ΦΠΑ": "φιπιά", "Φ.Π.Α.": "φιπιά", 
+    "VIP": "βι άι πι", "ΑΦΜ": "αφιμί", "Α.Φ.Μ.": "αφιμί", "Α.Φ.Μ": "αφιμί",
+    "SMS": "εσεμές", 
+    "ΑΜΚΑ": "άμκα", "Α.Μ.Κ.Α.": "άμκα", "Α.Μ.Κ.Α": "άμκα",
+    # ENGLISH TO GREEK (GENERIC CASE)
+    "service": "σέρβις", "courier": "κούριερ", "club": "κλάμπ", "portal": "πόρταλ", "app": "άπ",
+    "mobile": "μομπάιλ", "username": "γιούζερνειμ", "password": "πασγουόρντ",
+    "large": "λάρτζ", "medium": "μίντιουμ", "small": "σμόλ",
+    "bye": "μπάι", "thank": "θενκ", "thanks": "θενκς", "you": "γιου", "yes": "γιές", "my": "μάι", 
+    # COMPANIES
+    "toyota": "τογιότα", "hyundai": "χιουντάι", "viber": "βάιμπερ", "Yamaha": "γιαμάχα",
+    "Gant": "γκάντ", "Public": "πάμπλικ", 
+    # WEB
+    "online": "ονλάιν", "web": "γουέμπ", "site": "σάιτ", "website": "γουέμπσαιτ",
+    "gr": "τζι αρ", "www": "ντάμπλ γιού ντάμπλ γιου ντάμπλ γιού", "com": "κόμ", 
+    "email": "ιμέιλ", "e-mail": "ιμέιλ",
 }
 
 
@@ -80,9 +63,11 @@ punctuation = [";", "!", ":", "∙", "»", ","]
 
 
 def _read_in_chunks(file_object, chunk_size=2048):
-    """
-    Lazy function to read a file piece by piece.
-    Default chunk size: 2kB.
+    """ Lazy function to read a file piece by piece. Useful for big files.
+        Default chunk size: 2kB.
+        Args: 
+            file_object: An open file object.
+            chunk_size: How many bytes to read on each chunk.
     """
     while True:
         data = file_object.readlines(chunk_size)
@@ -174,18 +159,18 @@ def handle_hours(word: str):
     return word
 
 
-def process_word(word: str, remove_unknown_chars: bool = True, to_lower: bool = True) -> str:
+def process_word(word: str, keep_only_chars_and_digits: bool = True, to_lower: bool = True) -> str:
     word = word.strip()
     if to_lower:
         word = word.lower()
     for key, val in __basic_substitutes.items():
-        key = key.lower()
+        key = key.lower()  # convert to lowercase in order to avoid bugs
         if (key in word.lower().split()) or (key in word.lower().split(".")):
             word = re.sub(key, " " + val + " ", word.lower())
     word = re.sub(r"\.", " . ", word)
     word = re.sub(r"\?", " ? ", word)
-    if remove_unknown_chars:
-        word = re.sub(r"•|∙|»", " ", word)
+    word = re.sub(r"•|∙|»", " ", word)
+    if keep_only_chars_and_digits:
         word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
     else:
         word = re.sub(r"\n", " \n ", word)

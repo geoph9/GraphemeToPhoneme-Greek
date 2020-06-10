@@ -17,13 +17,13 @@ class Dictionary(object):
         for line in fileinput.input([path_to_lexicon], openhook=fileinput.hook_encoded("utf-8")):
             word = str(line.split()[0]).strip()
             phonemes = " ".join(line.split()[1:]).replace("\n", "").strip()
-            k = N if len(word) < N else len(word)  # Keep N characters if word is at least of length N
-            key = word[:k]
-            word_to_phoneme = {word: phonemes}  # Each lexicon dict value will be a dictionary with word -> phonemes
+            # Keep N characters if word is at least of length N
+            key = word if len(word) <= N else word[:N]
             if key in lexicon_dict.keys():
-                lexicon_dict[key].append(word_to_phoneme)
+                lexicon_dict[key][word] = phonemes
             else:
-                lexicon_dict[key] = word_to_phoneme
+                # Each lexicon dict value will be a dictionary with word -> phonemes
+                lexicon_dict[key] = {word: phonemes}
         return lexicon_dict
 
     def get_word_phonemes(self, word, initial_word=None):

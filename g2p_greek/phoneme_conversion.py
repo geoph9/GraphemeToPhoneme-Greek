@@ -74,30 +74,14 @@ def _check_diphthongs(word: str, current_phonemes: list) -> Tuple[str, list]:
     if not FOUND_DIPHTHONG:
         return word, current_phonemes
     # Right now the phonemes will probably have duplicates (like in gh i0 i0 a1)
-    phonemes = []
-    ph_index = 0
-    # The warning below is not an issue because if there are no diphthongs then FOUND_DIPHTHONG will be False and
-    # so we will return earlier
-    assert new_phonemes is not None, "New phonemes should contain the phoneme replacements if we got to this point."
-    while ph_index < len(new_phonemes) - 1:
-        if new_phonemes[ph_index] == new_phonemes[ph_index + 1]:
-            phonemes.append(new_phonemes[ph_index])
-            ph_index += 2
-        else:
-            phonemes.append(new_phonemes[ph_index])
-            # phonemes.append(new_phonemes[ph_index+1])
-            ph_index += 1
-    if ph_index == len(new_phonemes) - 1:
-        phonemes.append(new_phonemes[-1])  # add the last phoneme
-    else:  # The last phoneme should have already been added from the last iteration (and ph_index would be == len)
-        pass
+    phonemes = [phon for i, phon in enumerate(new_phonemes[:-1]) if phon != new_phonemes[i+1]] + [new_phonemes[-1]]
     return word, phonemes
 
 
 def _sanity_check(phonemes: list):
     # Part 1: There should be at least one intonated vowel in each word
     #         For example, the word 'τους' is written without a tone but it
-    #         is implied so we need to convert it from 't u0 s' to 't u1 s'.
+    #         is implied. so, we need to convert it from 't u0 s' to 't u1 s'.
     num_of_vowel_phones = len([ph for ph in phonemes if ph in vowel_phonemes])
     if num_of_vowel_phones == 1:  # if word is τους then we need intonation at t u1 s
         new_phonemes = []
@@ -107,7 +91,7 @@ def _sanity_check(phonemes: list):
             else:
                 new_phonemes.append(ph)
         phonemes = new_phonemes
-    # Part 2: In Greek we do not have consecutive consonant sounds.
+    # Part 2: In Greek we do not have consecutive consonant sounds (of the same consonant).
     #         For example, we can't have a1 n n a0, this will need to be converted to a1 n a0
     ph_id = 0
     new_phonemes = []

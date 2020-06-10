@@ -71,25 +71,25 @@ except ImportError:
     pass
 
 
-def basic_preprocessing(word: str):
+def basic_preprocessing(word: str, to_lower=True):
     """ Basic preprocessing. Here we assume that the input (word) is a
         single word and does not contain any spaces in it. This is normal
         since, supposedly, the input is each line in a words.txt file
         (and each line is a single word by default).
-        Note that this function does not convert numbers to words.
+        Note that this function does not convert numbers to words. (except from 10ος -> δέκατος etc)
         Args:
             word: A single word.
         Returns:
             The processed outcome of the word. May be more than one words.
             For example, if the input is "10,9" then is will be converted to
             "10 κόμμα 9" (decimal handling).
-            Note: The output word is always in lowercase.
     """
     word = re.sub(r"\s\t", "\t", word)
-    word = handle_commas(word.lower()).strip()
+    if to_lower: word = word.lower()
+    word = handle_commas(word).strip()
     word = handle_hours(word)
     # ----- BASIC PROCESSING -----
-    word = process_word(word, to_lower=False, remove_unknown_chars=True)
+    word = process_word(word, to_lower=False, keep_only_chars_and_digits=True)
     # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
     new_word = ""
     for sub_word in word.split():
@@ -98,11 +98,6 @@ def basic_preprocessing(word: str):
         # Split words into words and digits (numbers). E.g. είναι2 -> είναι 2
         words = re.split(r"(\d+)", sub_word)  # may have spaces
         words = [w for w in words if w.strip() != ""]  # remove spaces from list
-        # match = re.match(r"([a-zα-ωά-ώϊΐϋΰ]+)([0-9]+)*", sub_word, re.I)
-        # if match:
-        #     words = match.groups()
-        # else:
-        #     words = [sub_word]
         for w in words:
             if w[0].isdigit() and \
                     (w.endswith("ο") or
@@ -120,20 +115,9 @@ def basic_preprocessing(word: str):
                 for l in word:
                     if l.isdigit():
                         digit += l
-                new_word += convert_numbers(digit) + "τ" + w[-2] + w[-1] + " "  # convert 10ος to δεκατος
+                new_word += convert_numbers(digit) + "τ" + w[-2] + w[-1] + " "  # convert 10ος to δέκατος
             else:
                 new_word += w + " "
-            # elif w.isdigit():
-            #     # Case 2: If the whole word is a digit then just convert it
-            #     new_word += convert_numbers(w) + " "
-            # else:
-            #     # Case 3: Check if there are any digits left. Otherwise just leave the same word.
-            #     for char in w:
-            #         if char.isdigit():
-            #             print("Found a digit inside a text: {}. We will ignore it and continue.".format(w))
-            #             continue
-            #         new_word += char
-            #     new_word += " "
     new_word = re.sub(r"\s+", " ", new_word).strip()
     return new_word
 
@@ -142,14 +126,54 @@ def _number_to_word(number: str) -> str:
     """
         Args:
             number: A string that should match to a number.
-        Returns:
-            the corresponding word.
-        Raises:
-            ValueError if the argument is not a digit.
+        Returns: the corresponding word.
+        Raises: ValueError if the argument is not a digit.
     """
-    if not number.isdigit():
-        raise ValueError("Not a number: {}.".format(number))
+    if not number.isdigit(): raise ValueError("Not a number: {}.".format(number))
     return convert_numbers(number)
+
+
+def convert_test_word(initial_word, use_numbers=False):
+    out_lines = []
+    for word in initial_word.split():
+        word_complex = basic_preprocessing(word.strip())
+        edited_word_complex = word_complex
+        if english_mappings != {}:
+            for letter in set(word_complex):
+                if letter in english_mappings.keys():
+                    edited_word_complex = re.sub(letter, english_mappings[letter], edited_word_complex)
+        for sub_word, edited_sub_word in zip(word_complex.split(), edited_word_complex.split()):
+            edited_sub_word = edited_sub_word.lower().strip()
+            # Convert numbers to words
+            if edited_sub_word.isdigit():
+                edited_sub_word = _number_to_word(edited_sub_word)
+                if not use_numbers:
+                    for sub_word_number in edited_sub_word.split():  # e.g. if edited_sub_word is "χίλια εννιακόσια"
+                        out_lines.append(sub_word_number + " " + " ".join(convert_word(sub_word_number)[1]))
+                else:
+                    if len(edited_sub_word.split()) > 1:
+                        for sub_word_number in edited_sub_word.split():  # e.g. if edited_sub_word is "χίλια εννιακόσια"
+                            out_lines.append(sub_word_number + " " + " ".join(convert_word(sub_word_number)[1]))
+                    else:
+                        out_phonemes = ""
+                        for sub_word_number in edited_sub_word.split():  
+                            out_phonemes += " " + " ".join(convert_word(sub_word_number)[1])
+                        # e.g. out_phonems = "dh e0 k a0" but edited_sub_word is "10"
+                        #      and so we will append "10 dh e0 k a0"
+                        out_lines.append(edited_sub_word + " " + out_phonemes)
+            else:
+                if len(edited_sub_word) == 1:  # single character
+                    if edited_sub_word in single_letter_pronounciations.keys():
+                        # E.g. convert "α" to "άλφα"
+                        edited_sub_word = single_letter_pronounciations[edited_sub_word]
+
+                    else:
+                        warnings.warn("An unseen character has been observed while "
+                                      "creating the lexicon: {}. Ignoring it...".format(edited_sub_word))
+                        continue
+                out_lines.append(sub_word + " " + " ".join(convert_word(edited_sub_word)[1]))
+    out_lines = list(set(out_lines))  # remove duplicates
+    return out_lines
 
 
 def convert_file(path_to_file: str, out_path: str,
@@ -178,10 +202,9 @@ def convert_file(path_to_file: str, out_path: str,
         lines = fr.readlines()
         out_lines: list = []
         for initial_line in lines:
-            words = str(initial_line.split()[0]).strip()
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
-            for word in words.split():
-                word_complex = basic_preprocessing(word)
+            for word in initial_line.split():
+                word_complex = basic_preprocessing(word.strip())  # trim and process string
                 for initial_word in word_complex.split():
                     initial_word = initial_word.strip()  # e.g. word is "10"
                     if initial_word.isdigit():
@@ -192,11 +215,12 @@ def convert_file(path_to_file: str, out_path: str,
                             # the number to a word since that is more than 2 syllables.
                             if len(initial_word) > 2 and len(set(initial_word)) > 1:
                                 initial_word = _number_to_word(initial_word)
-                    # Get the phonemes for 10 (or δεκα)
-                    _, current_phones = convert_word(initial_word)  # Get word and phonemes
+                    # Get the phonemes. We are ignoring the first arg which is the word since we already have the word.
+                    _, current_phones = convert_word(initial_word)  # Get the phonemes for 10 (or δεκα)
                     # If use_numbers is true then write "10 dh e1 k a0"
-                    # else write "δεκα dh e1 k a0"
+                    # else write "δέκα dh e1 k a0"
                     out_lines.append(initial_word + " " + " ".join(current_phones) + "\n")  # append new line at the end
+    out_lines = list(set(out_lines))  # remove duplicates
     with open(out_path, "w", encoding="utf-8") as fw:
         fw.writelines(out_lines)
 
@@ -228,7 +252,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
     if check_dirs:
         out_path = _check_dir(path_to_file=path_to_words_txt, out_path=out_path, path_to_lexicon=path_to_lexicon)
     # Get lexicon hash map
-    N = 3
+    N = 3  # hard coded
     # Lexicon dictionary will be of the form:
     #   { "αυτ": {"αυτός": "a0 f t o1 s", "αυτοί": "a0 f t i1", ...}, ... }
     # This is done because the dictionary is huge and it's easier to handle it using a hash map.
@@ -237,13 +261,13 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
     with open(path_to_words_txt, "r", encoding="utf-8") as fr:
         lines = fr.readlines()
         out_lines: list = []
-        for initial_word in lines:
+        for i, initial_word in enumerate(lines):
             if initial_word.replace("\n", "").strip() == "":
                 continue
             initial_word_complex = initial_word.strip()
             # Step 1: Make sure there are not spaces
             if " " in initial_word_complex:
-                raise ValueError("Found space inside an entry of words.txt: {}.".format(initial_word_complex))
+                raise ValueError("Found space inside an entry of words.txt.\nLine: {}\nWord: {}.".format(i, initial_word_complex))
             # Step 2: Pre-processing and digit handling
             initial_word_complex = basic_preprocessing(initial_word_complex)
             # Step 3: Get rid of latin characters (if any). TODO: add more complex rules for english.
@@ -293,7 +317,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
                             continue
                     out = lexicon.get_word_phonemes(edited_sub_word, initial_word=initial_sub_word)
                 out_lines.append(out)
-
+    out_lines = list(set(out_lines))  # remove duplicates
     if not is_shell_command:
         # Write the new lines
         with open(os.path.abspath(out_path), "w", encoding="utf-8") as fw:
@@ -302,7 +326,7 @@ def convert_from_lexicon(path_to_words_txt: str, path_to_lexicon: str, out_path:
     return out_lines
 
 
-def main():
+def cmdline():
     """ If you have a list of words and you don't know if the words exists in the lexicon file or not then use the
         following.
         Usage: python g2p_greek.py --path-to-words-txt /home/user/data/all_words.txt \
@@ -320,7 +344,7 @@ def main():
         description="For testing purposes you may use the --test-word argument followed by a single of words.",
         add_help=False
     )
-    general_parser.add_argument("-o", "--out-path", required=False, default="../data/el-gr.dic",
+    general_parser.add_argument("-o", "--out-path", required=False, default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tests", "output.dic"),
                                 # action=InvalidPathError,
                                 help="Output path for the new lexicon (containing words and phonemes).")
     general_parser.add_argument("-t", "--test-word", required=False, default="",
@@ -353,7 +377,7 @@ def main():
     full_words_parser.add_argument("-w", "--path-to-words-txt", required=False, default=".", action=InvalidPathError,
                                    help="Path to the words.txt file (or any other name) that contains all of the words"
                                         "that appear in our data (e.g. in the kaldi text file).")
-    full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default="../data/el-gr.dic",
+    full_words_parser.add_argument("-l", "--path-to-lexicon", required=False, default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "el-gr.dic"),
                                    action=InvalidPathError,
                                    help="Path to the lexicon containing the already known phonemes of all words "
                                         "that appear in the words.txt file above.")
@@ -377,7 +401,7 @@ def main():
     full_words_args, _ = full_words_parser.parse_known_args()
     unknown_words_args, _ = unknown_words_parser.parse_known_args()
 
-    if general_args.use_numbers.lower() in [True, 'true']:
+    if general_args.use_numbers in [True, 'true', 'True']:
         use_numbers = True
     else:
         use_numbers = False
@@ -386,11 +410,10 @@ def main():
     # If there is a test word then calculate its phonemes and exit
     if general_args.test_word != "":
         word = general_args.test_word
-        print("Initial word:", word)
-        word = basic_preprocessing(word)
-        print("Processed word:", word)
-        for sub_word in word.split():
-            convert_word(sub_word)
+        # print("Initial word:", word)
+        out = convert_test_word(word, use_numbers=use_numbers)
+        # print("{} {}".format(out[0], " ".join(out[1])))
+        print(out)
         sys.exit(0)
 
     # --------------------------- USE LEXICON (RECOMMENDED) -----------------------------------
@@ -402,7 +425,7 @@ def main():
                                    check_dirs=True, use_numbers=use_numbers)
         if general_args.is_shell_command:
             print("".join(out))
-        # sys.exit(0)
+        sys.exit(0)
     else:
         print("Could not located the lexicon path:", lex_path, ". We are proceeding to use this algorithm for "
                                                                "all conversions.")
@@ -410,10 +433,11 @@ def main():
     # ---------------------------------- USE OUR ALGORITHM ---------------------------------
     # mode 2: Do not use the lexicon
     if unknown_words_args.path_to_unknown_words != ".":
+        print("NAHHHH")
         convert_file(path_to_file=unknown_words_args.path_to_unknown_words, out_path=general_args.out_path,
                      check_dirs=True, use_numbers=use_numbers)
         sys.exit(0)
 
 
 if __name__ == '__main__':
-    main()
+    cmdline()

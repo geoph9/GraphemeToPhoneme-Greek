@@ -28,3 +28,16 @@ english_mappings = {
     "th": "θ"
 }
 
+# Dev
+english_numerals = {
+    "one": "ουάν",
+    "two": "του",
+    "three": "θρί",
+    "four": "φόρ",
+    "five": "φάιβ",
+    "six": "σίξ",
+    "seven": "σέβεν",
+    "eight": "έιτ",
+    "nine": "νάιν",
+    "ten": "τέν"
+}
