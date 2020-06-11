@@ -62,6 +62,14 @@ __basic_substitutes = {
 punctuation = [";", "!", ":", "∙", "»", ","]
 
 
+def read_substitute_words(filepath):
+    import json
+    with open(filepath, "r", encoding='utf-8') as fr:
+        content = fr.read()
+        dictionary = json.loads(content)
+    return dictionary
+
+
 def _read_in_chunks(file_object, chunk_size=2048):
     """ Lazy function to read a file piece by piece. Useful for big files.
         Default chunk size: 2kB.
