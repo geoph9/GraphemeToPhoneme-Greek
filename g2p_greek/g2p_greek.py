@@ -91,7 +91,7 @@ def basic_preprocessing(initial_word: str, to_lower=True):
     new_word = ""
     for word in word_complex.split():
         # ----- BASIC PROCESSING -----
-        word = process_word(word, to_lower=False, keep_only_chars_and_digits=False)
+        word = process_word(word, to_lower=False, keep_only_chars_and_digits=True)
         # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
         for sub_word in word.split():
             if sub_word.strip() == "":

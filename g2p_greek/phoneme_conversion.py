@@ -111,7 +111,11 @@ def _check_till_dipthongs(word):
                 word_couples[counter + 1] = word_couples[counter+1][-1]  # convert 'ια' to 'α' since 'ι' is being used by the previous dipthong
         else:
             for val in word_couples[counter]:
-                phons.append(character_rules[val])
+                try:
+                    phons.append(character_rules[val])
+                except KeyError as e:
+                    print("Key not found in single character rules: {}.".format(str(e)))
+                    continue
             if counter + 1 < len(word_couples): 
                 # in order to avoid duplicates
                 if word_couples[counter+1] not in diphthong_rules.keys(): word_couples[counter+1] = word_couples[counter+1][1]
