@@ -89,7 +89,7 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, substitute_wor
     word_complex = handle_commas(initial_word).strip()
     word_complex = handle_hours(word_complex)
     word_complex = re.sub(r"-|-", " ", word_complex)
-    print(word_complex)
+    # print(word_complex)
     new_word = ""
     for word in word_complex.split():
         # ----- BASIC PROCESSING -----
