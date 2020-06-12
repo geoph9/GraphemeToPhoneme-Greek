@@ -78,7 +78,8 @@ execute it from any place by calling `python -m g2p_greek <ARGUMENTS>`.
 - If you want to only use this algorithm (fastest way):
     `python -m g2p_greek -u /example/path/to/words.txt` (`-u` is equivalent to `--path-to-unknown-words`)
 - Default output is in `tests/output.dic`.
-- To use the basic substitutions you can create a json (or csv) file like the one in `data/example_substitue_words.json`.
+- To use the basic substitutions you can create a json (or csv) file like the one in `data/example_substitue_words.json`
+  and use the `--substitute-words-path` (or `-s`) argument followed by the path to the file.
 
 #### Example usage:
 
@@ -89,12 +90,15 @@ contain the words followed by their phonemes.
     ```
     python -m g2p_greek --path-to-words-txt /home/user/data/words.txt \
                         --path-to-lexicon ./el-gr.dic \
-                        --out-path /home/user/data/new_lexicon.dic
+                        --out-path /home/user/data/new_lexicon.dic \
+                        --substitute-words-path /home/user/data/substitute_words.json
    ```
     
     The above will read each line of the `words.txt` file and for each word 
     that it finds, it will find its phonemes (either in the lexicon or by 
-    the algorithm) and will create an entry to the `new_lexicon.dic`. 
+    the algorithm) and will create an entry to the `new_lexicon.dic`. Also, 
+    if there are words in words.txt that exist in the keyset of `substitute_words.json`
+    then they will be converted to the corresponding json value.
     Example output:
     
     ```
