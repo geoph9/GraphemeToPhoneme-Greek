@@ -78,6 +78,7 @@ execute it from any place by calling `python -m g2p_greek <ARGUMENTS>`.
 - If you want to only use this algorithm (fastest way):
     `python -m g2p_greek -u /example/path/to/words.txt` (`-u` is equivalent to `--path-to-unknown-words`)
 - Default output is in `tests/output.dic`.
+- To use the basic substitutions you can create a json (or csv) file like the one in `data/example_substitue_words.json`.
 
 #### Example usage:
 

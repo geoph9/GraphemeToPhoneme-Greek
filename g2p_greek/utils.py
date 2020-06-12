@@ -24,50 +24,10 @@ import argparse
 import os
 import sys
 import re
-
-
-__basic_substitutes = {
-    # GENERAL
-    "4k": "φορ κέι", "λοιπον": "λοιπόν",
-    # CURRENCIES
-    "$": "δολλάρια", "€": "ευρώ",
-    # PUNCTUATION
-    "&": "και", "@": "παπάκι", "#": "δίεση", "%": "τοις εκατό", ",": "κόμμα",
-    # PRONOUNS AND OTHERS
-    "απο": "από", "μια": "μία", "ποιος": "ποιός", "ποια": "ποιά", "ποιο": "ποιό", "πιο": "πιό",
-    # WORDS WITH MORE THAN ONE VOWEL THAT HAVE NO INTONATION
-    "γεια": "γειά", "για": "γιά",
-    "δυο": "δύο", "τρια": "τρία",  # NUMBERS
-    "οκ": "οκέι", "okay": "οκέι", "ok": "οκέι",
-    # INITIALS
-    "ΚΤΕΟ": "κτέο", "ΕΟΠΥΥ": "εοπύ", "ΦΠΑ": "φιπιά", "Φ.Π.Α.": "φιπιά", 
-    "VIP": "βι άι πι", "ΑΦΜ": "αφιμί", "Α.Φ.Μ.": "αφιμί", "Α.Φ.Μ": "αφιμί",
-    "SMS": "εσεμές", 
-    "ΑΜΚΑ": "άμκα", "Α.Μ.Κ.Α.": "άμκα", "Α.Μ.Κ.Α": "άμκα",
-    # ENGLISH TO GREEK (GENERIC CASE)
-    "service": "σέρβις", "courier": "κούριερ", "club": "κλάμπ", "portal": "πόρταλ", "app": "άπ",
-    "mobile": "μομπάιλ", "username": "γιούζερνειμ", "password": "πασγουόρντ",
-    "large": "λάρτζ", "medium": "μίντιουμ", "small": "σμόλ",
-    "bye": "μπάι", "thank": "θενκ", "thanks": "θενκς", "you": "γιου", "yes": "γιές", "my": "μάι", 
-    # COMPANIES
-    "toyota": "τογιότα", "hyundai": "χιουντάι", "viber": "βάιμπερ", "Yamaha": "γιαμάχα",
-    "Gant": "γκάντ", "Public": "πάμπλικ", 
-    # WEB
-    "online": "ονλάιν", "web": "γουέμπ", "site": "σάιτ", "website": "γουέμπσαιτ",
-    "gr": "τζι αρ", "www": "ντάμπλ γιού ντάμπλ γιου ντάμπλ γιού", "com": "κόμ", 
-    "email": "ιμέιλ", "e-mail": "ιμέιλ",
-}
+import json 
 
 
 punctuation = [";", "!", ":", "∙", "»", ","]
-
-
-def read_substitute_words(filepath):
-    import json
-    with open(filepath, "r", encoding='utf-8') as fr:
-        content = fr.read()
-        dictionary = json.loads(content)
-    return dictionary
 
 
 def _read_in_chunks(file_object, chunk_size=2048):
@@ -100,7 +60,7 @@ def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
     # Check if the out path is a directory or a file (if it's a file then the parent directory must exist)
     if os.path.isdir(out_path):
         # default filename
-        out_path = os.path.join(out_path, "unknown_phonemes.txt")
+        out_path = os.path.join(out_path, os.path.basename(path_to_file))
     else:
         if not os.path.exists(os.path.dirname(out_path)):
             raise FileNotFoundError("Could not locate the directory where the output file will be saved:", out_path)
@@ -167,12 +127,15 @@ def handle_hours(word: str):
     return word
 
 
-def process_word(word: str, keep_only_chars_and_digits: bool = True, to_lower: bool = True) -> str:
+def process_word(word: str, basic_substitutes: dict = None,
+                 keep_only_chars_and_digits: bool = True, to_lower: bool = True) -> str:
+    if basic_substitutes is None: basic_substitutes = {}
     word = word.strip()
     if to_lower:
         word = word.lower()
-    for key, val in __basic_substitutes.items():
-        key = key.lower()  # convert to lowercase in order to avoid bugs
+        # print(word, end=", ")
+    for key, val in basic_substitutes.items():
+        key = key.lower()  # convert to lowercase in order to avoid bugs]
         if (key in word.lower().split()) or (key in word.lower().split(".")):
             if key == "$": key = "\$"
             word = re.sub(key, " " + val + " ", word.lower().strip())
@@ -188,6 +151,27 @@ def process_word(word: str, keep_only_chars_and_digits: bool = True, to_lower: b
             word = re.sub(char, " " + char + " ", word)
     word = re.sub(r"\s+", " ", word).strip()  # Remove redundant spaces
     return word
+
+
+def read_substitute_words(path):
+    assert os.path.isfile(path), "Invalid Path: {}.".format(path)
+    with open(path, 'r', encoding='utf-8') as fr:
+        content = fr.read()
+    try:
+        sub_words_dict = json.loads(content)
+    except json.decoder.JSONDecodeError:
+        content = content.split("\n")
+        lines = [l.split(",") for l in content]
+        if not all([len(l) == 2 for l in lines]):
+            print("It seems like the path provided is neither in json format nor in csv format.")
+            print("Aborting...")
+            sys.exit(1)
+        # We have now read the file as a csv
+        sub_words_dict = {old_word: new_word for old_word, new_word in lines}
+    except Exception as e:
+        print("Uncaught exception:", e)
+        sys.exit(1)
+    return sub_words_dict
 
 
 class InvalidPathError(argparse.Action):
