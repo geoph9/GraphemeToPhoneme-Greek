@@ -42,7 +42,6 @@ warnings.warn("Important: digits_to_words.py has been deprecated."
 
 
 to_plural = lambda word: re.sub("ερα", "ερις", re.sub("τρία", "τρείς", word))  # for 13 and 14 special cases in plural
-print("YEEEEEEEEEEEEEEEEEEEEEEEEEEE")
 
 def _check_input(number: str, length: int, operator: str = None):
     """ This function checks the validity of the inputs.
