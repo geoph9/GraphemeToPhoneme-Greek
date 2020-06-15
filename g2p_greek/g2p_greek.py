@@ -62,6 +62,10 @@ from string import punctuation as valid_punctuation
 from g2p_greek.rules import *
 from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas, handle_hours, read_substitute_words
 from g2p_greek.digits_to_words import convert_numbers
+try:
+    from num2word.utils import convert_ordinals
+except ImportError:
+    convert_ordinals = lambda x: x
 
 from g2p_greek.dictionary import Dictionary
 from g2p_greek.phoneme_conversion import convert_word
@@ -94,6 +98,8 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to
     word_complex = handle_hours(word_complex)
     # A list of hyphens taken from here: http://jkorpela.fi/dashes.html
     word_complex = re.sub(r"-|-|-|~|֊|᠆|‐|‑|‒|–|—|―|⁓|⁻|₋|−|〜|﹘|﹣|－", " ", word_complex)
+    # Convert ordinals (if the num2word package is installed)
+    word_complex = convert_ordinals(word_complex)
     # print(word_complex)
     new_word = ""
     for word in word_complex.split():
@@ -108,25 +114,7 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to
             words = re.split(r"(\d+)", sub_word)  # may have spaces
             words = [w for w in words if w.strip() != ""]  # remove spaces from list
             for w in words:
-                if w[0].isdigit() and \
-                        (w.endswith("ο") or
-                         w.endswith("η") or
-                         w.endswith("α")):
-                    # Case 1: If we have words like 10ο
-                    digit = ""
-                    for l in word:
-                        if l.isdigit():
-                            digit += l
-                    new_word += convert_numbers(digit) + "τ" + w[-1] + " "  # convert 10ο to δέκατο
-                    pass
-                elif w[0].isdigit() and (w.endswith("ος") or w.endswith("ες")):
-                    digit = ""
-                    for l in word:
-                        if l.isdigit():
-                            digit += l
-                    new_word += convert_numbers(digit) + "τ" + w[-2] + w[-1] + " "  # convert 10ος to δέκατος
-                else:
-                    new_word += w + " "
+                new_word += w + " "
         new_word += " "
     new_word = re.sub(r"\s+", " ", new_word).strip()
     return new_word
