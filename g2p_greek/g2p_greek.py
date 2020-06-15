@@ -88,7 +88,8 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, substitute_wor
     if to_lower: initial_word = initial_word.lower()
     word_complex = handle_commas(initial_word).strip()
     word_complex = handle_hours(word_complex)
-    word_complex = re.sub(r"-|-", " ", word_complex)
+    # A list of hyphens taken from here: http://jkorpela.fi/dashes.html
+    word_complex = re.sub(r"-|-|-|~|֊|᠆|‐|‑|‒|–|—|―|⁓|⁻|₋|−|〜|﹘|﹣|－", " ", word_complex)
     # print(word_complex)
     new_word = ""
     for word in word_complex.split():
