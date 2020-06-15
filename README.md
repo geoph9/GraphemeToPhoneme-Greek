@@ -45,9 +45,12 @@ this repo as a package.
 
 ## How to use
 
-There are tho main scripts which you should use (though feel free to make any other 
-changes). Below, I will try to give a brief introduction on the main points of these 
-scripts. 
+After installation you may use the `g2p_greek.py` script for your word-to-phoneme 
+conversion. There is also the `digits_to_words.py` script which has been deprecated.
+The [Numbers2Words-Greek](https://github.com/geoph9/Numbers2Words-Greek) repository 
+is more stable. Just clone it and install it and we are going to use that instead of 
+`digits_to_words.py`. Below, I will try to give a brief introduction on the main points 
+of these scripts.
 
 
 ## The `g2p_greek.py` script:
@@ -138,7 +141,7 @@ For more information check the `g2p_greek/g2p_greek.py` script.
 
 ## The `digits_to_words.py` script:
 The script has its own repository [here](https://github.com/geoph9/Numbers2Words-Greek) 
-but I have a similar copy here since I have done some modifications. It is not advised 
+but I have a similar copy here since I have done some modifications. It is **not advised** 
 to use this script separately. The scripts inside the Numbers2Words-Greek repository 
 are more stable.
 

@@ -6,7 +6,11 @@ import warnings
 
 import re
 from g2p_greek.rules import *
-from g2p_greek.digits_to_words import convert_numbers
+try:
+    from num2word.convert_numbers import convert_numbers
+except ImportError:
+    from g2p_greek.digits_to_words import convert_numbers
+    
 
 try:
     from g2p_greek.english_rules import english_mappings

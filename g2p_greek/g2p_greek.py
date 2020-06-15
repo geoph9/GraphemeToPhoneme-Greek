@@ -61,11 +61,12 @@ from string import punctuation as valid_punctuation
 
 from g2p_greek.rules import *
 from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas, handle_hours, read_substitute_words
-from g2p_greek.digits_to_words import convert_numbers
 try:
     from num2word.utils import convert_ordinals
+    from num2word.convert_numbers import convert_numbers
 except ImportError:
     convert_ordinals = lambda x: x
+    from g2p_greek.digits_to_words import convert_numbers
 
 from g2p_greek.dictionary import Dictionary
 from g2p_greek.phoneme_conversion import convert_word
@@ -251,7 +252,8 @@ class G2P(object):
                         if edited_sub_word in single_letter_pronounciations.keys():
                             # E.g. convert "α" to "άλφα"
                             edited_sub_word = single_letter_pronounciations[edited_sub_word]
-
+                        elif edited_sub_word in self.punc_to_keep:
+                            continue
                         else:
                             warnings.warn("An unseen character has been observed while "
                                           "creating the lexicon: {}.".format(edited_sub_word))

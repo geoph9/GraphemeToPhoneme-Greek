@@ -32,9 +32,17 @@ from shutil import move
 import re
 from g2p_greek.utils import process_word, handle_commas, punctuation
 from g2p_greek.prefixes import _prefixes
+import warnings
+
+
+warnings.simplefilter('always', DeprecationWarning)
+warnings.warn("Important: digits_to_words.py has been deprecated."
+              " It is advised to use the Numbers2Words-Greek package as described in the README."
+              " The current version may contain some bugs and so you should probably install Numbers2Words-Greek. Use at your own risk.", DeprecationWarning)
+
 
 to_plural = lambda word: re.sub("ερα", "ερις", re.sub("τρία", "τρείς", word))  # for 13 and 14 special cases in plural
-
+print("YEEEEEEEEEEEEEEEEEEEEEEEEEEE")
 
 def _check_input(number: str, length: int, operator: str = None):
     """ This function checks the validity of the inputs.
