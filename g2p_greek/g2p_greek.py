@@ -106,7 +106,6 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to
         # ----- BASIC PROCESSING -----
         word = process_word(word, to_lower=False, keep_only_chars_and_digits=True, 
                             basic_substitutes=substitute_words_dict, punctuation_to_keep=punctuation_to_keep)
-        # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
         for sub_word in word.split():
             if sub_word.strip() == "":
                 continue

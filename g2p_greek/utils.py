@@ -116,7 +116,7 @@ def handle_hours(word: str):
     if ":" not in word:
         return word
     parts = word.split(":")
-    if len(parts) != 2 or "" in parts:
+    if len(parts) != 2 or "" in parts or (not (parts[0].isdigit() and parts[1].isdigit())):
         # Just ignore the ':'
         return re.sub(":", " ", word).strip()
     word = re.sub(":", " και ", word)
