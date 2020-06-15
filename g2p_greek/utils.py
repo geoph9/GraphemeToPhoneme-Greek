@@ -127,8 +127,19 @@ def handle_hours(word: str):
     return word
 
 
-def process_word(word: str, basic_substitutes: dict = None,
+def process_word(word: str, basic_substitutes: dict = None, punctuation_to_keep = [],
                  keep_only_chars_and_digits: bool = True, to_lower: bool = True) -> str:
+    """ Process the words. It is usefull if you want to remove unessecary punctuation and other characters.
+        Args:
+            word: The word to process.
+            basic_substitutes: A dictionary matching words to their substitutes (usually transliterations).
+                               e.g. {"word": "γουόρντ"}
+            punctuation_to_keep: A list of punctuations to keep. Sometimes you may want to keep dots, 
+                                 exclamation marks and question marks. Then you may use ['.', '!', '?']
+            keep_only_chars_and_digits: Whether to keep only characters and numbers or not. Usefull in cases 
+                                        where you may have many types of punctuation.
+            to_lower: Whether to convert to lowercase or not.
+    """
     if basic_substitutes is None: basic_substitutes = {}
     word = word.strip()
     if to_lower:
@@ -143,7 +154,7 @@ def process_word(word: str, basic_substitutes: dict = None,
     word = re.sub(r"\?", " ? ", word)
     word = re.sub(r"•|∙|»", " ", word)
     if keep_only_chars_and_digits:
-        word = re.sub(r"[^\w\d]", " ", word)  # Keep only characters and digits
+        word = re.sub(r"[^\w\d{}]".format("".join(punctuation_to_keep)), " ", word)  # Keep only characters and digits
     else:
         word = re.sub(r"\n", " \n ", word)
         word = re.sub(r"\t", " \t ", word)

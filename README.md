@@ -66,6 +66,10 @@ If you provide the `--path-to-lexicon` argument followed by the path to the
 if the word is inside the lexicon and only if it is not, then it will 
 convert it with this algorithm.
 
+You may also choose to keep some specific punctuation, by using the 
+`--punctuation-to-keep` argument followed by the sequence of the punctuations
+(without spaces). Example: `--punctuation-to-keep .!?`.
+
 Note: This is the main script of the package which means that you can also 
 execute it from any place by calling `python -m g2p_greek <ARGUMENTS>`.
 

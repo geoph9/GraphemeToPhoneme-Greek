@@ -57,6 +57,8 @@ import sys
 import warnings
 
 import re
+from string import punctuation as valid_punctuation
+
 from g2p_greek.rules import *
 from g2p_greek.utils import process_word, _check_dir, InvalidPathError, handle_commas, handle_hours, read_substitute_words
 from g2p_greek.digits_to_words import convert_numbers
@@ -71,7 +73,8 @@ except ImportError:
     pass
 
 
-def basic_preprocessing(initial_word: str, to_lower: bool = True, substitute_words_dict: dict = None):
+def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to_keep: list = [],
+                        substitute_words_dict: dict = None):
     """ Basic preprocessing. Here we assume that the input (word) is a
         single word and does not contain any spaces in it. This is normal
         since, supposedly, the input is each line in a words.txt file
@@ -79,6 +82,7 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, substitute_wor
         Note that this function does not convert numbers to words. (except from 10ος -> δέκατος etc)
         Args:
             initial_word: A single word.
+            punctuation_to_keep: Checp the process_word method in utils.py
         Returns:
             The processed outcome of the word. May be more than one words.
             For example, if the input is "10,9" then is will be converted to
@@ -94,7 +98,8 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, substitute_wor
     new_word = ""
     for word in word_complex.split():
         # ----- BASIC PROCESSING -----
-        word = process_word(word, to_lower=False, keep_only_chars_and_digits=True, basic_substitutes=substitute_words_dict)
+        word = process_word(word, to_lower=False, keep_only_chars_and_digits=True, 
+                            basic_substitutes=substitute_words_dict, punctuation_to_keep=punctuation_to_keep)
         # ----- REMOVE CERTAIN PUNCTUATION AND CONVERT NUMBERS TO WORDS -----
         for sub_word in word.split():
             if sub_word.strip() == "":
@@ -140,7 +145,7 @@ def _number_to_word(number: str) -> str:
 
 class G2P(object):
     def __init__(self, words_txt_path: str = None, out_path: str = None, is_shell_command: bool = False, use_numbers: bool = False,
-                 lexicon_path: str = None, substitute_words_path: str = None, N: int = 3, test_mode: bool = False):
+                 lexicon_path: str = None, substitute_words_path: str = None, N: int = 3, test_mode: bool = False, punc_to_keep=""):
         """ Finds the phonemes of a list of unknown words from a file in this format:
                 word1
                 word2
@@ -170,6 +175,11 @@ class G2P(object):
             Returns:
                 The output lines of the new lexicon.
         """
+        if isinstance(punc_to_keep, str):
+            punc_to_keep = list(punc_to_keep)
+        assert isinstance(punc_to_keep, list)
+        if not set(punc_to_keep) <= set(list(valid_punctuation)):  # if the punctuation provided is not a subset of the valid punctuation
+            raise argparse.ArgumentTypeError("Invalid punctuation was provided in --punctuation-to-keep.")
         if test_mode is False:
             self.out_path = _check_dir(path_to_file=words_txt_path, out_path=out_path, path_to_lexicon=lexicon_path)
         self.words_path = words_txt_path
@@ -179,6 +189,7 @@ class G2P(object):
         self.is_shell_command = is_shell_command
         self.use_numbers = use_numbers
         self.N = N
+        self.punc_to_keep = punc_to_keep
 
     def initialize_lexicon(self):
         self.lexicon =  Dictionary(self.lexicon_path, self.N)
@@ -202,7 +213,7 @@ class G2P(object):
             if " " in initial_word_complex:
                 raise ValueError("Found space inside an entry of words.txt.\nLine: {}\nWord: {}.".format(i, initial_word_complex))
             # Step 2: Pre-processing and digit handling
-            initial_word_complex = basic_preprocessing(initial_word_complex, substitute_words_dict=self.substitute_words_dict)
+            initial_word_complex = basic_preprocessing(initial_word_complex, substitute_words_dict=self.substitute_words_dict, punctuation_to_keep=self.punc_to_keep)
             # Step 3: Get rid of latin characters (if any). TODO: add more complex rules for english.
             edited_word_complex = self.convert_latin_chars(initial_word_complex)
             # The processing may have created more than one words (e.g. 102.4 -> εκατό δύο κόμμα τέσσερα)
@@ -346,6 +357,8 @@ def cmdline():
     general_parser.add_argument("--substitute-words-path", "-s", action=InvalidPathError, default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "substitute_words.json"), 
                                 help="Path to a json or CSV file containing matchings from words to their transliteration in Greek."
                                      "For example, {'mercedes': 'μερσέντες', 'ok': 'οκέι', ...}")
+    general_parser.add_argument("--punctuation-to-keep", type=str, default="", dest="punc_to_keep",
+                                help="A sequence of punctuations you want to keep (without spaces)")
     general_parser.set_defaults(is_shell_command=False)
     full_words_parser = argparse.ArgumentParser(
         description="Provide a words.txt file in kaldi format, meaning just a text file containing different "
@@ -393,7 +406,8 @@ def cmdline():
     # If there is a test word then calculate its phonemes and exit
     if general_args.test_word != "":
         word = general_args.test_word
-        g2p = G2P(test_mode=True, substitute_words_path=general_args.substitute_words_path, use_numbers=use_numbers)
+        g2p = G2P(test_mode=True, substitute_words_path=general_args.substitute_words_path, 
+                  use_numbers=use_numbers, punc_to_keep=general_args.punc_to_keep)
         out = g2p.convert_test_word(word)
         print(out)
         sys.exit(0)
@@ -405,8 +419,9 @@ def cmdline():
         words_txt_path = unknown_words_args.path_to_unknown_words
     else:
         raise ValueError("Could not initialize the path to the words.txt file. Something must be wrong with the arguments.")
-    g2p = G2P(words_txt_path, general_args.out_path, is_shell_command=general_args.is_shell_command, use_numbers=use_numbers,
-              lexicon_path=full_words_args.path_to_lexicon, substitute_words_path=general_args.substitute_words_path, N=3)
+    g2p = G2P(words_txt_path, general_args.out_path, is_shell_command=general_args.is_shell_command, 
+              use_numbers=use_numbers, lexicon_path=full_words_args.path_to_lexicon, 
+              substitute_words_path=general_args.substitute_words_path, N=3, punc_to_keep=general_args.punc_to_keep)
 
     # --------------------------- USE LEXICON (RECOMMENDED) -----------------------------------
     # mode 1: Using the cmu lexicon
