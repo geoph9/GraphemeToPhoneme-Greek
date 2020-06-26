@@ -43,7 +43,7 @@ warnings.warn("Important: digits_to_words.py has been deprecated."
 
 to_plural = lambda word: re.sub("ερα", "ερις", re.sub("τρία", "τρείς", word))  # for 13 and 14 special cases in plural
 
-def _check_input(number: str, length: int, operator: str = None):
+def _check_input(number, length, operator = None):
     """ This function checks the validity of the inputs.
         Args:
             number: The number which we want to check (must be a string)
@@ -63,7 +63,7 @@ def _check_input(number: str, length: int, operator: str = None):
         assert len(number) == length, "The digit must contain " + str(length) + " digits."
 
 
-def _convert_1digit(number: str) -> str:
+def _convert_1digit(number):
     _check_input(number, 1)
     if number not in _prefixes['1digit'].keys():
         raise ValueError("Digit", number, "is not a valid number.")
@@ -71,7 +71,7 @@ def _convert_1digit(number: str) -> str:
     return out
 
 
-def _convert_2digit(number: str) -> str:
+def _convert_2digit(number):
     _check_input(number, 2)
     if number in _prefixes['2digit'].keys():  # so if it is 10 then return 'δέκα' (same for 11, 12 , 20, ..., 90)
         return _prefixes['2digit'][number]
@@ -97,7 +97,7 @@ def _convert_2digit(number: str) -> str:
     return out.strip()
 
 
-def _convert_3digit(number: str) -> str:
+def _convert_3digit(number):
     _check_input(number, 3)
     if number in _prefixes['3digit'].keys():  # E.g. if we have 300 then just return "τριακόσια"
         return _prefixes['3digit'][number]
@@ -126,7 +126,7 @@ def _convert_3digit(number: str) -> str:
     return out.strip()
 
 
-def _convert_4digit(number: str) -> str:
+def _convert_4digit(number):
     _check_input(number, 4)
     if number in _prefixes['4digit'].keys():  # E.g. if we have 7000 then just return "εφτά χιλιάδες"
         return _prefixes['4digit'][number]
@@ -157,7 +157,7 @@ def _convert_4digit(number: str) -> str:
     return out.strip()
 
 
-def _convert_5digit(number: str) -> str:
+def _convert_5digit(number):
     _check_input(number, 5)
     if number in _prefixes['5digit'].keys():  # E.g. if we have 40000 then just return "σαράντα χιλιάδες"
         return _prefixes['5digit'][number]
@@ -187,7 +187,7 @@ def _convert_5digit(number: str) -> str:
     return out.strip()
 
 
-def _convert_6digit(number: str) -> str:
+def _convert_6digit(number):
     _check_input(number, 6)
     if number in _prefixes['6digit'].keys():  # E.g. if we have 400000 then just return "σαράντα χιλιάδες"
         return _prefixes['6digit'][number]
@@ -225,7 +225,7 @@ def _convert_6digit(number: str) -> str:
     return out.strip()
 
 
-def _convert_more_than7_less_than10_digits(number: str) -> str:
+def _convert_more_than7_less_than10_digits(number):
     # From 1000000 (1 million) to 1000000000 (1 billion)
     _check_input(number, 7, operator="greater_equal")
     _check_input(number, 9, operator="less_equal")
@@ -269,7 +269,7 @@ def _convert_more_than7_less_than10_digits(number: str) -> str:
     return out.strip()
 
 
-def _convert_more_than10_less_than13_digits(number: str) -> str:
+def _convert_more_than10_less_than13_digits(number):
     # From 1 billion to 1 trillion
     _check_input(number, 10, operator="greater_equal")
     _check_input(number, 12, operator="less_equal")
@@ -286,7 +286,7 @@ def _convert_more_than10_less_than13_digits(number: str) -> str:
     return out.strip()
 
 
-def convert_numbers(word: str) -> str:
+def convert_numbers(word):
     """ Given a string as input, the function will return its transliteration if
         the string can be transformed to a digit. Otherwise, it will return the
         same word.
@@ -323,7 +323,7 @@ def convert_numbers(word: str) -> str:
             raise ValueError("We only accept integers of maximum 13 digits")
 
 
-def convert_sentence(sentence: str, to_lower: bool = False):
+def convert_sentence(sentence, to_lower = False):
     sentence = handle_commas(sentence)
     # sentence = re.sub(r"\.", " . ", sentence)
     final_sent = []
@@ -364,7 +364,7 @@ def convert_sentence(sentence: str, to_lower: bool = False):
     return final_sent
 
 
-def _replace_file_contents(filepath: str, to_lower: bool = False):
+def _replace_file_contents(filepath, to_lower = False):
     """
         Args:
             filepath: The path to the file for which you want to change the numbers to words.

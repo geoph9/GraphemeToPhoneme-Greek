@@ -4,3 +4,6 @@ g2p_greek/__pycache__
 g2p_greek.egg-info
 
 .gitignore
+
+dist
+build

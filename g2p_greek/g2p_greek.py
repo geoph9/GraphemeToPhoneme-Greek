@@ -78,8 +78,8 @@ except ImportError:
     pass
 
 
-def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to_keep: list = [],
-                        substitute_words_dict: dict = None):
+def basic_preprocessing(initial_word, to_lower = True, punctuation_to_keep = [],
+                        substitute_words_dict = None):
     """ Basic preprocessing. Here we assume that the input (word) is a
         single word and does not contain any spaces in it. This is normal
         since, supposedly, the input is each line in a words.txt file
@@ -94,7 +94,8 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to
             "10 κόμμα 9" (decimal handling).
     """
     initial_word = re.sub(r"\s\t", "\t", initial_word)
-    if to_lower: initial_word = initial_word.lower()
+    if to_lower:
+        initial_word = initial_word.lower()
     word_complex = handle_commas(initial_word).strip()
     word_complex = handle_hours(word_complex)
     # A list of hyphens taken from here: http://jkorpela.fi/dashes.html
@@ -120,7 +121,7 @@ def basic_preprocessing(initial_word: str, to_lower: bool = True, punctuation_to
     return new_word
 
 
-def _number_to_word(number: str) -> str:
+def _number_to_word(number):
     """
         Args:
             number: A string that should match to a number.
@@ -132,8 +133,8 @@ def _number_to_word(number: str) -> str:
 
 
 class G2P(object):
-    def __init__(self, words_txt_path: str = None, out_path: str = None, is_shell_command: bool = False, use_numbers: bool = False,
-                 lexicon_path: str = None, substitute_words_path: str = None, N: int = 3, test_mode: bool = False, punc_to_keep=""):
+    def __init__(self, words_txt_path = None, out_path = None, is_shell_command = False, use_numbers = False,
+                 lexicon_path = None, substitute_words_path = None, N = 3, test_mode = False, punc_to_keep=""):
         """ Finds the phonemes of a list of unknown words from a file in this format:
                 word1
                 word2
@@ -192,7 +193,7 @@ class G2P(object):
         return edited_sentence
 
     def _convert_from_list(self, lines):
-        out_lines: list = []
+        out_lines = []
         for i, initial_word in enumerate(lines):
             if initial_word.replace("\n", "").strip() == "":
                 continue

@@ -18,13 +18,11 @@ except ImportError:
     english_mappings = {}
     pass
 
-from typing import Tuple
+
+non_characters = ["", " ", "(", ")", ".", ",", ";", "?", "\n", "\r", "\t"]
 
 
-non_characters: list = ["", " ", "(", ")", ".", ",", ";", "?", "\n", "\r", "\t"]
-
-
-def convert_word(word: str) -> Tuple[str, list]:
+def convert_word(word):
     """ Gets a word and returns the word followed by its phonemes.
         E.g. convert_word("παράδειγμα") will produce "παράδειγμα p a0 r a1 dh i0 gh m a0"
 
@@ -69,7 +67,7 @@ def convert_word(word: str) -> Tuple[str, list]:
 
 
 
-def _sanity_check(phonemes: list):
+def _sanity_check(phonemes):
     # Part 1: There should be at least one intonated vowel in each word
     #         For example, the word 'τους' is written without a tone but it
     #         is implied. so, we need to convert it from 't u0 s' to 't u1 s'.

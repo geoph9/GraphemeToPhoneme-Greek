@@ -46,7 +46,7 @@ def _read_in_chunks(file_object, chunk_size=2048):
         yield data
 
 
-def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
+def _check_dir(path_to_file, out_path, path_to_lexicon = None):
     # Assert lexicon existence
     if path_to_lexicon:
         if not os.path.exists(path_to_lexicon):
@@ -67,7 +67,7 @@ def _check_dir(path_to_file: str, out_path: str, path_to_lexicon: str = None):
     return out_path
 
 
-def handle_commas(word: str, comma_symbol=",") -> str:
+def handle_commas(word, comma_symbol=","):
     # If , (comma) is not between two numbers then erase it.
     comma_index = word.find(comma_symbol)
     while comma_index != -1:
@@ -107,7 +107,7 @@ def handle_commas(word: str, comma_symbol=",") -> str:
     return word
 
 
-def handle_hours(word: str):
+def handle_hours(word):
     # We will assume that the word is an hour if it contains a ":"
     # For example, convert 10:45 to 10 και 45
     # If the minutes are 15 or 30 then the hour will look like:
@@ -127,8 +127,8 @@ def handle_hours(word: str):
     return word
 
 
-def process_word(word: str, basic_substitutes: dict = None, punctuation_to_keep = [],
-                 keep_only_chars_and_digits: bool = True, to_lower: bool = True) -> str:
+def process_word(word, basic_substitutes = None, punctuation_to_keep = [],
+                 keep_only_chars_and_digits = True, to_lower = True):
     """ Process the words. It is usefull if you want to remove unessecary punctuation and other characters.
         Args:
             word: The word to process.
@@ -140,7 +140,8 @@ def process_word(word: str, basic_substitutes: dict = None, punctuation_to_keep 
                                         where you may have many types of punctuation.
             to_lower: Whether to convert to lowercase or not.
     """
-    if basic_substitutes is None: basic_substitutes = {}
+    if basic_substitutes is None:
+        basic_substitutes = {}
     word = word.strip()
     if to_lower:
         word = word.lower()

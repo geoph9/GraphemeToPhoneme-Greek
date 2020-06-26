@@ -10,10 +10,10 @@ class Dictionary(object):
         self.N = 3  # Hash map key length
 
     @staticmethod
-    def _lexicon_lookup(path_to_lexicon: str, N=3):
+    def _lexicon_lookup(path_to_lexicon, N=3):
         # Implement a hash lookup keeping N characters as the key
         # IMPORTANT: all words in the lexicon file must be unique (appear only once in the file)
-        lexicon_dict: dict = {}
+        lexicon_dict = {}
         for line in fileinput.input([path_to_lexicon], openhook=fileinput.hook_encoded("utf-8")):
             word = str(line.split()[0]).strip()
             phonemes = " ".join(line.split()[1:]).replace("\n", "").strip()

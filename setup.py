@@ -26,5 +26,6 @@ setup(
         'Programming Language :: Python :: 3.6+',
         'Topic :: Scientific/Engineering',
     ],
+    setup_requires=['wheel'],
     include_package_data=True
 )
