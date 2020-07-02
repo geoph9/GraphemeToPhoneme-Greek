@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 import fileinput
+import warnings
+
 from g2p_greek.phoneme_conversion import convert_word
+from g2p_greek.rules import single_letter_words
+from g2p_greek.english_rules import english_mappings
 
 
 class Dictionary(object):
@@ -27,9 +31,18 @@ class Dictionary(object):
         return lexicon_dict
 
     def get_word_phonemes(self, word, initial_word=None):
-        key = word[:self.N]
         if initial_word is None:
             initial_word = word
+        if len(word.strip()) == 1:
+            try:
+                return initial_word + " " + single_letter_words[word] + "\n"
+            except KeyError:
+                try:
+                    return initial_word + " " + english_mappings[word] + "\n"
+                except KeyError:
+                    warnings.warn("The single letter word {} could not be converted.".format(word), RuntimeWarning)
+                    return initial_word + " \n"
+        key = word[:self.N]
         if key in self.lexicon_dict.keys():
             if word in self.lexicon_dict[key].keys():
                 current_phones = self.lexicon_dict[key][word].split()
