@@ -4,7 +4,7 @@ import fileinput
 import warnings
 
 from g2p_greek.phoneme_conversion import convert_word
-from g2p_greek.rules import single_letter_words
+from g2p_greek.rules import single_letter_pronounciations
 from g2p_greek.english_rules import english_mappings
 
 
@@ -35,10 +35,10 @@ class Dictionary(object):
             initial_word = word
         if len(word.strip()) == 1:
             try:
-                return initial_word + " " + single_letter_words[word] + "\n"
+                return initial_word + " " + " ".join(convert_word(single_letter_pronounciations[word])[1]) + "\n"
             except KeyError:
                 try:
-                    return initial_word + " " + english_mappings[word] + "\n"
+                    return initial_word + " " + " ".join(convert_word(english_mappings[word])[1]) + "\n"
                 except KeyError:
                     warnings.warn("The single letter word {} could not be converted.".format(word), RuntimeWarning)
                     return initial_word + " \n"
