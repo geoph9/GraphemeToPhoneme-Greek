@@ -250,7 +250,10 @@ class G2P(object):
                             continue
                 else:
                     if len(edited_sub_word) == 1:  # single character
-                        if edited_sub_word in single_letter_pronounciations.keys():
+                        if edited_sub_word in single_letter_words:
+                            print(edited_sub_word)
+                            pass
+                        elif edited_sub_word in single_letter_pronounciations.keys():
                             # E.g. convert "α" to "άλφα"
                             edited_sub_word = single_letter_pronounciations[edited_sub_word]
                         elif edited_sub_word in self.punc_to_keep:
@@ -261,6 +264,7 @@ class G2P(object):
                             continue
                     if self.lexicon is None:
                         _, current_phones = convert_word(edited_sub_word)  # Get word and phonemes
+                        print(current_phones)
                         out = initial_sub_word + " " + " ".join(current_phones) + "\n"  # append new line at the end
                     else:
                         out = self.lexicon.get_word_phonemes(edited_sub_word, initial_word=initial_sub_word)

@@ -50,6 +50,12 @@ def convert_word(word):
             return transliterated_word, out.strip().split()
         else:
             word = transliterated_word
+    if len(word) == 1:
+        try:
+            return word, [character_rules[word]]
+        except KeyError:
+            warnings.warn("Character {} could not be converted.".format(word), RuntimeWarning)
+            return word, []
 
     # word, current_phonemes = _check_single_chars(word)
     # # Since ψ and ξ match to two phonemes we will replace them explicitly
