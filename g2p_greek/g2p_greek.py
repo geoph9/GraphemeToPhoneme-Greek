@@ -249,7 +249,9 @@ class G2P(object):
                             continue
                 else:
                     if len(edited_sub_word) == 1:  # single character
-                        if edited_sub_word in single_letter_pronounciations.keys():
+                        if edited_sub_word in single_letter_words:
+                            pass
+                        elif edited_sub_word in single_letter_pronounciations.keys():
                             # E.g. convert "α" to "άλφα"
                             edited_sub_word = single_letter_pronounciations[edited_sub_word]
                         elif edited_sub_word in self.punc_to_keep:

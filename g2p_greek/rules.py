@@ -87,8 +87,8 @@ single_letter_pronounciations = {
     "ε": "έψιλον",
     "έ": "έψιλον",
     "ζ": "ζήτα",
-    "η": "ήτα",
-    "ή": "ήτα",
+    "η": "η",  # it is an article so don't convert it
+    "ή": "ή",  # it is an article so don't convert it
     "θ": "θήτα",
     "ι": "γιότα",
     "ί": "γιότα",
@@ -99,7 +99,7 @@ single_letter_pronounciations = {
     "μ": "μι",
     "ν": "νι",
     "ξ": "ξι",
-    "ο": "όμικρον",
+    "ο": "ο",  # it is an article so don't convert it
     "ό": "όμικρον",
     "π": "πι",
     "ρ": "ρο",
@@ -115,3 +115,6 @@ single_letter_pronounciations = {
     "ω": "ωμέγα",
     "ώ": "ωμέγα"
 }
+
+single_letter_words = ["ο", "η", "ή"] 
+
